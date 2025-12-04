@@ -44,10 +44,22 @@ exports.handler = async (event, context) => {
   }
 
   // Get Notion credentials from environment variables
-  const notion = new Client({
-    auth: process.env.NOTION_API_KEY,
-  });
+  const notionApiKey = process.env.NOTION_API_KEY;
   const databaseId = process.env.NOTION_DATABASE_ID;
+
+  // Check if environment variables are set
+  if (!notionApiKey || !databaseId) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ 
+        error: 'Notion configuration missing. Please set NOTION_API_KEY and NOTION_DATABASE_ID environment variables.' 
+      }),
+    };
+  }
+
+  const notion = new Client({
+    auth: notionApiKey,
+  });
 
   try {
     const data = JSON.parse(event.body);
