@@ -15,7 +15,8 @@ const PAYMENT_LINKS = {
     wero: '', // Add your Wero payment link or phone number
 };
 
-// Wedding Date - June 12, 2026
+// Wedding Date - June 12, 2026 at 3:30 PM (ceremony time)
+// Update the time (15:30:00) if your ceremony starts at a different time
 const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
 
 // ===========================
@@ -236,26 +237,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="album-card">
                     <h3>📸 Ceremony</h3>
                     <p>Beautiful moments from our ceremony</p>
-                    <a href="#" class="btn" onclick="alert('Add your Lightroom or photo gallery link here'); return false;">View Album</a>
-                    <a href="#" class="btn-small" onclick="alert('Add download link here'); return false;">Download</a>
+                    <a href="https://lightroom.adobe.com/your-ceremony-album" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
+                    <a href="#" class="btn-small" data-album="ceremony">Download</a>
                 </div>
                 <div class="album-card">
                     <h3>🎉 Reception</h3>
                     <p>Fun times at the reception</p>
-                    <a href="#" class="btn" onclick="alert('Add your Lightroom or photo gallery link here'); return false;">View Album</a>
-                    <a href="#" class="btn-small" onclick="alert('Add download link here'); return false;">Download</a>
+                    <a href="https://lightroom.adobe.com/your-reception-album" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
+                    <a href="#" class="btn-small" data-album="reception">Download</a>
                 </div>
                 <div class="album-card">
                     <h3>💑 Couple Photos</h3>
                     <p>Special moments together</p>
-                    <a href="#" class="btn" onclick="alert('Add your Lightroom or photo gallery link here'); return false;">View Album</a>
-                    <a href="#" class="btn-small" onclick="alert('Add download link here'); return false;">Download</a>
+                    <a href="https://lightroom.adobe.com/your-couple-album" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
+                    <a href="#" class="btn-small" data-album="couple">Download</a>
                 </div>
                 <div class="album-card">
                     <h3>🎊 Guest Photos</h3>
                     <p>Candid shots from our guests</p>
-                    <a href="#" class="btn" onclick="alert('Add your Lightroom or photo gallery link here'); return false;">View Album</a>
-                    <a href="#" class="btn-small" onclick="alert('Add download link here'); return false;">Download</a>
+                    <a href="https://lightroom.adobe.com/your-guest-album" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
+                    <a href="#" class="btn-small" data-album="guests">Download</a>
                 </div>
             </div>
             <div class="info-card" style="margin-top: 40px;">
@@ -264,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <ol>
                     <li>Upload your photos to Lightroom, Google Photos, Dropbox, or any photo hosting service</li>
                     <li>Get the shareable links for each album</li>
-                    <li>Replace the placeholder links in the album cards above (edit script.js)</li>
+                    <li>Replace the placeholder links in the album cards above (edit script.js, line 240-260)</li>
                     <li>For downloads, you can provide ZIP file links or direct album download links</li>
                 </ol>
             </div>
@@ -291,16 +292,31 @@ document.addEventListener('DOMContentLoaded', function() {
 // UTILITY FUNCTIONS
 // ===========================
 
-// Smooth scroll for anchor links
+// Smooth scroll for anchor links (only for valid internal anchors)
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
+        const href = this.getAttribute('href');
+        // Only handle if it's a valid anchor (not just '#')
+        if (href && href !== '#') {
+            const target = document.querySelector(href);
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         }
     });
+});
+
+// Add event listeners for album download buttons (when dynamically loaded)
+document.addEventListener('click', function(e) {
+    if (e.target.hasAttribute('data-album')) {
+        e.preventDefault();
+        const album = e.target.getAttribute('data-album');
+        console.log(`Download requested for ${album} album. Add your download link in script.js (line 240-260).`);
+        // To enable downloads, replace the console.log above with:
+        // window.location.href = 'https://your-download-link.com/album.zip';
+    }
 });
