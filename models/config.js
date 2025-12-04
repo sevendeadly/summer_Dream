@@ -3,9 +3,12 @@
 // ===========================
 
 // Notion Integration Configuration
+// ⚠️ SECURITY WARNING: Never put real API keys in client-side code!
+// For production, use serverless functions (Netlify/Vercel/AWS Lambda)
+// See docs/NOTION_INTEGRATION.md for secure setup instructions
 export const NOTION_CONFIG = {
-    apiKey: '', // Add your Notion API key here
-    databaseId: '', // Add your Notion database ID here
+    apiKey: '', // Keep empty - use serverless function instead
+    databaseId: '', // Database ID can be here (not sensitive)
 };
 
 // Payment Links Configuration
