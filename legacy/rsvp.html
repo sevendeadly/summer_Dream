@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP - Summer & Dream</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="info.html">Wedding Info</a></li>
+                <li><a href="gift.html">Gift Pot</a></li>
+                <li><a href="rsvp.html" class="active">RSVP</a></li>
+                <li><a href="albums.html">Albums</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>RSVP</h1>
+                <p>Please let us know if you can join us!</p>
+                <p class="rsvp-deadline">Kindly respond by <strong>May 1, 2026</strong></p>
+            </div>
+        </section>
+
+        <section class="rsvp-section">
+            <div class="container">
+                <div class="rsvp-form-container">
+                    <form id="rsvp-form" class="rsvp-form">
+                        <div class="form-group">
+                            <label for="name">Full Name *</label>
+                            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Will you be attending? *</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="attending" value="yes" required>
+                                    <span>Yes, I'll be there! 🎉</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="attending" value="no" required>
+                                    <span>Sorry, I can't make it 😢</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="guests-group" style="display: none;">
+                            <label for="guests">Number of Guests (including yourself) *</label>
+                            <select id="guests" name="guests">
+                                <option value="1">1 Guest</option>
+                                <option value="2">2 Guests</option>
+                                <option value="3">3 Guests</option>
+                                <option value="4">4 Guests</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="dietary-group" style="display: none;">
+                            <label for="dietary">Dietary Restrictions or Allergies</label>
+                            <textarea id="dietary" name="dietary" rows="3" placeholder="Please let us know if you have any dietary restrictions or allergies"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Message for the Couple</label>
+                            <textarea id="message" name="message" rows="4" placeholder="Share your well wishes, song requests, or any questions you might have!"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-submit">Submit RSVP</button>
+                        </div>
+
+                        <div id="form-message" class="form-message"></div>
+                    </form>
+
+                    <div class="notion-setup-info">
+                        <h3>🔧 Setup Instructions</h3>
+                        <p>To enable RSVP submissions to Notion:</p>
+                        <ol>
+                            <li>Create a Notion database with columns: Name, Email, Phone, Attending, Guests, Dietary, Message</li>
+                            <li>Get your Notion API key from <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener noreferrer">notion.so/my-integrations</a></li>
+                            <li>Share your database with the integration</li>
+                            <li>Add your API key and database ID to <code>script.js</code></li>
+                        </ol>
+                        <p><strong>Note:</strong> The form will show a message even without Notion setup, but won't save data.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Summer & Dream | Made with ❤️</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

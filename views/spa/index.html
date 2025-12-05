@@ -1,0 +1,647 @@
+import React, { useState, useEffect } from 'react';
+import { Heart, Gift, Calendar, MapPin, Camera, Menu, X, Clock, Users } from 'lucide-react';
+
+// COLOR PALETTE SWITCHER - Change activeTheme to switch palettes
+const THEMES = {
+  warm: {
+    primary: '#B87C4C',
+    secondary: '#EBD9D1',
+    light: '#F7F4EA',
+    accent: '#A8BBA3'
+  },
+  ocean: {
+    primary: '#9FB3DF',
+    secondary: '#9EC6F3',
+    light: '#BDDDE4',
+    accent: '#FFF1D5'
+  },
+  neutral: {
+    primary: '#C9B59C',
+    secondary: '#D9CFC7',
+    light: '#EFE9E3',
+    accent: '#F9F8F6'
+  }
+};
+
+const WeddingWebsite = () => {
+  const [activeTheme, setActiveTheme] = useState('warm'); // Change to 'ocean' or 'neutral'
+  const [currentPage, setCurrentPage] = useState('home');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [formData, setFormData] = useState({ name: '', email: '', attending: 'yes', guests: '1', dietary: '', message: '' });
+  const [submitStatus, setSubmitStatus] = useState('');
+
+  const theme = THEMES[activeTheme];
+  const weddingDate = new Date('2026-06-12T15:00:00');
+  const isAfterWedding = new Date() > weddingDate;
+
+  // Countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const difference = weddingDate - now;
+      
+      if (difference > 0) {
+        setCountdown({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // NOTION RSVP INTEGRATION
+  const handleRSVPSubmit = async () => {
+    setSubmitStatus('sending');
+
+    try {
+      // ⚠️ SECURITY WARNING: DO NOT put real API keys in client-side code!
+      // This is a simplified example. For production:
+      // 1. Create a serverless function (Netlify/Vercel/AWS Lambda)
+      // 2. Call that function from here
+      // 3. Keep API keys on the server side only
+      // See docs/NOTION_INTEGRATION.md for secure setup
+      
+      // EXAMPLE - Replace this entire block with serverless function call:
+      // const response = await fetch('/.netlify/functions/submit-rsvp', {
+      //   method: 'POST',
+      //   body: JSON.stringify(formData)
+      // });
+
+      const NOTION_API_KEY = 'YOUR_NOTION_API_KEY_HERE'; // ⚠️ PLACEHOLDER ONLY
+      const DATABASE_ID = 'YOUR_DATABASE_ID_HERE'; // Database ID (less sensitive)
+
+      const response = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${NOTION_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28'
+        },
+        body: JSON.stringify({
+          parent: { database_id: DATABASE_ID },
+          properties: {
+            Name: { title: [{ text: { content: formData.name } }] },
+            Email: { email: formData.email },
+            Attending: { select: { name: formData.attending } },
+            Guests: { number: parseInt(formData.guests) },
+            Dietary: { rich_text: [{ text: { content: formData.dietary || 'None' } }] },
+            Message: { rich_text: [{ text: { content: formData.message || 'No message' } }] }
+          }
+        })
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', attending: 'yes', guests: '1', dietary: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('RSVP submission error:', error);
+      setSubmitStatus('error');
+    }
+  };
+
+  // Navigation
+  const navigate = (page) => {
+    setCurrentPage(page);
+    setMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  // Styles with theme variables
+  const styles = {
+    container: {
+      fontFamily: "'Cormorant Garamond', serif",
+      minHeight: '100vh',
+      background: `linear-gradient(135deg, ${theme.light} 0%, ${theme.secondary} 100%)`,
+      color: '#333'
+    },
+    header: {
+      background: `linear-gradient(135deg, ${theme.primary}ee 0%, ${theme.secondary}ee 100%)`,
+      backdropFilter: 'blur(10px)',
+      padding: '1rem 2rem',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50,
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    },
+    nav: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    },
+    logo: {
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: 'white'
+    },
+    menuButton: {
+      background: 'none',
+      border: 'none',
+      color: 'white',
+      cursor: 'pointer',
+      display: 'block'
+    },
+    navLinks: {
+      display: menuOpen ? 'flex' : 'none',
+      flexDirection: 'column',
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      background: `${theme.primary}f5`,
+      backdropFilter: 'blur(10px)',
+      padding: '1rem',
+      gap: '0.5rem'
+    },
+    navLink: {
+      color: 'white',
+      textDecoration: 'none',
+      padding: '0.75rem 1rem',
+      borderRadius: '8px',
+      transition: 'all 0.3s',
+      cursor: 'pointer',
+      background: currentPage === 'home' ? `${theme.accent}40` : 'transparent'
+    },
+    content: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '2rem',
+      animation: 'fadeIn 0.5s ease-in'
+    },
+    card: {
+      background: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      marginBottom: '2rem',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+      transition: 'transform 0.3s',
+      border: `2px solid ${theme.secondary}`
+    },
+    button: {
+      background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.accent} 100%)`,
+      color: 'white',
+      border: 'none',
+      padding: '1rem 2rem',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontSize: '1rem',
+      transition: 'transform 0.2s',
+      fontFamily: 'inherit'
+    },
+    input: {
+      width: '100%',
+      padding: '0.75rem',
+      borderRadius: '8px',
+      border: `2px solid ${theme.secondary}`,
+      fontSize: '1rem',
+      fontFamily: 'inherit',
+      marginBottom: '1rem'
+    }
+  };
+
+  // HOME PAGE
+  const HomePage = () => (
+    <div style={styles.content}>
+      <div style={{...styles.card, textAlign: 'center', marginTop: '2rem'}}>
+        <Heart size={48} color={theme.primary} style={{margin: '0 auto 1rem'}} />
+        <h1 style={{fontSize: '3rem', margin: '1rem 0', color: theme.primary}}>
+          J-D KOA & A-N Teu
+        </h1>
+        <p style={{fontSize: '1.5rem', color: theme.accent, marginBottom: '2rem'}}>
+          are getting married!
+        </p>
+        <div style={{fontSize: '1.25rem', color: '#666', marginBottom: '2rem'}}>
+          <Calendar size={24} style={{display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem'}} />
+          June 12, 2026
+        </div>
+
+        {!isAfterWedding && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1rem',
+            maxWidth: '600px',
+            margin: '2rem auto'
+          }}>
+            {Object.entries(countdown).map(([unit, value]) => (
+              <div key={unit} style={{
+                background: `linear-gradient(135deg, ${theme.secondary} 0%, ${theme.light} 100%)`,
+                padding: '1.5rem 1rem',
+                borderRadius: '12px',
+                border: `2px solid ${theme.primary}40`
+              }}>
+                <div style={{fontSize: '2rem', fontWeight: 'bold', color: theme.primary}}>{value}</div>
+                <div style={{fontSize: '0.9rem', textTransform: 'uppercase', color: '#666'}}>{unit}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '2rem'}}>
+          <button onClick={() => navigate('info')} style={styles.button}>Wedding Details</button>
+          <button onClick={() => navigate('rsvp')} style={styles.button}>RSVP</button>
+          <button onClick={() => navigate('gifts')} style={styles.button}>Gift Registry</button>
+          {isAfterWedding && (
+            <button onClick={() => navigate('albums')} style={{...styles.button, background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.primary} 100%)`}}>
+              View Photos
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // WEDDING INFO PAGE
+  const InfoPage = () => (
+    <div style={styles.content}>
+      <h1 style={{textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '2rem'}}>Wedding Details</h1>
+      
+      <div style={styles.card}>
+        <h2 style={{color: theme.primary, display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+          <Calendar size={28} /> Ceremony
+        </h2>
+        <p><strong>Date:</strong> Friday, June 12, 2026</p>
+        <p><strong>Time:</strong> 3:00 PM</p>
+        <p><strong>Venue:</strong> [Venue Name & Address]</p>
+      </div>
+
+      <div style={styles.card}>
+        <h2 style={{color: theme.primary, display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+          <MapPin size={28} /> Reception
+        </h2>
+        <p><strong>Time:</strong> 6:00 PM - Midnight</p>
+        <p><strong>Venue:</strong> [Reception Venue & Address]</p>
+        <p><strong>Dinner:</strong> 7:00 PM</p>
+      </div>
+
+      <div style={styles.card}>
+        <h2 style={{color: theme.primary}}>Dress Code</h2>
+        <p><strong>Semi-Formal/Cocktail Attire</strong></p>
+        <p>We recommend elegant summer attire. The ceremony will be outdoors, so comfortable shoes are suggested.</p>
+      </div>
+
+      <div style={styles.card}>
+        <h2 style={{color: theme.primary}}>Accommodations</h2>
+        <p><strong>Recommended Hotels:</strong></p>
+        <ul>
+          <li>[Hotel Name 1] - [Address] - [Phone/Website]</li>
+          <li>[Hotel Name 2] - [Address] - [Phone/Website]</li>
+        </ul>
+        <p style={{marginTop: '1rem', color: '#666', fontSize: '0.9rem'}}>
+          Mention "KOA-Teu Wedding" for potential group discounts
+        </p>
+      </div>
+    </div>
+  );
+
+  // GIFTS PAGE
+  const GiftsPage = () => (
+    <div style={styles.content}>
+      <h1 style={{textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '2rem'}}>
+        <Gift size={40} style={{verticalAlign: 'middle', marginRight: '1rem'}} />
+        Gift Registry
+      </h1>
+
+      <div style={styles.card}>
+        <h2 style={{color: theme.primary}}>Your Presence is Our Present</h2>
+        <p style={{fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem'}}>
+          Having you at our wedding is the greatest gift we could ask for. However, if you wish to contribute to our future together, we would be grateful for a contribution to our honeymoon fund.
+        </p>
+
+        <div style={{
+          background: `linear-gradient(135deg, ${theme.light} 0%, ${theme.secondary} 100%)`,
+          padding: '2rem',
+          borderRadius: '12px',
+          marginBottom: '2rem'
+        }}>
+          <h3 style={{color: theme.primary, marginBottom: '1.5rem'}}>Send a Gift</h3>
+          
+          <div style={{marginBottom: '2rem'}}>
+            <h4 style={{color: theme.accent, marginBottom: '1rem'}}>💳 Bank Transfer</h4>
+            <p style={{fontFamily: 'monospace', fontSize: '1.1rem', background: 'white', padding: '1rem', borderRadius: '8px', border: `2px solid ${theme.primary}40`}}>
+              <strong>IBAN:</strong> [Your IBAN Number]
+            </p>
+          </div>
+
+          <div style={{marginBottom: '2rem'}}>
+            <h4 style={{color: theme.accent, marginBottom: '1rem'}}>📱 Wero</h4>
+            <p style={{fontFamily: 'monospace', fontSize: '1.1rem', background: 'white', padding: '1rem', borderRadius: '8px', border: `2px solid ${theme.primary}40`}}>
+              [Your Wero ID]
+            </p>
+          </div>
+
+          <div>
+            <h4 style={{color: theme.accent, marginBottom: '1rem'}}>💰 PayPal / Wise</h4>
+            <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+              <button 
+                onClick={() => window.open('https://paypal.me/yourusername', '_blank')}
+                style={styles.button}
+              >
+                Send via PayPal
+              </button>
+              <button 
+                onClick={() => window.open('https://wise.com/pay/me/yourusername', '_blank')}
+                style={styles.button}
+              >
+                Send via Wise
+              </button>
+            </div>
+            <p style={{fontSize: '0.9rem', color: '#666', marginTop: '1rem'}}>
+              Note: Update PayPal/Wise links with your actual payment URLs
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.card}>
+        <h2 style={{color: theme.primary}}>Wishlist (Optional)</h2>
+        <p style={{marginBottom: '1rem'}}>If you prefer to give a physical gift, here are some items we'd love:</p>
+        <ul style={{lineHeight: '2'}}>
+          <li>🏠 Home decor items</li>
+          <li>🍳 Kitchen appliances</li>
+          <li>📚 Books for our library</li>
+          <li>🌱 Plants for our garden</li>
+          <li>🎨 Art pieces</li>
+        </ul>
+        <p style={{marginTop: '1.5rem', fontSize: '0.9rem', color: '#666'}}>
+          Feel free to surprise us with something thoughtful!
+        </p>
+      </div>
+    </div>
+  );
+
+  // RSVP PAGE
+  const RSVPPage = () => (
+    <div style={styles.content}>
+      <h1 style={{textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '2rem'}}>
+        <Users size={40} style={{verticalAlign: 'middle', marginRight: '1rem'}} />
+        RSVP
+      </h1>
+
+      <div style={styles.card}>
+        <p style={{fontSize: '1.1rem', marginBottom: '2rem', textAlign: 'center'}}>
+          Please respond by <strong>May 1, 2026</strong>
+        </p>
+
+        <div>
+          <input
+            type="text"
+            placeholder="Full Name *"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            style={styles.input}
+          />
+
+          <input
+            type="email"
+            placeholder="Email Address *"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            style={styles.input}
+          />
+
+          <select
+            value={formData.attending}
+            onChange={(e) => setFormData({...formData, attending: e.target.value})}
+            style={styles.input}
+          >
+            <option value="yes">Joyfully Accept</option>
+            <option value="no">Regretfully Decline</option>
+          </select>
+
+          {formData.attending === 'yes' && (
+            <>
+              <select
+                value={formData.guests}
+                onChange={(e) => setFormData({...formData, guests: e.target.value})}
+                style={styles.input}
+              >
+                <option value="1">1 Guest</option>
+                <option value="2">2 Guests</option>
+                <option value="3">3 Guests</option>
+                <option value="4">4 Guests</option>
+              </select>
+
+              <input
+                type="text"
+                placeholder="Dietary Restrictions (optional)"
+                value={formData.dietary}
+                onChange={(e) => setFormData({...formData, dietary: e.target.value})}
+                style={styles.input}
+              />
+            </>
+          )}
+
+          <textarea
+            placeholder="Message to the couple (optional)"
+            value={formData.message}
+            onChange={(e) => setFormData({...formData, message: e.target.value})}
+            rows="4"
+            style={{...styles.input, resize: 'vertical'}}
+          />
+
+          <button 
+            onClick={handleRSVPSubmit}
+            style={{...styles.button, width: '100%'}}
+            disabled={submitStatus === 'sending'}
+          >
+            {submitStatus === 'sending' ? 'Submitting...' : 'Submit RSVP'}
+          </button>
+
+          {submitStatus === 'success' && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '1rem',
+              background: '#d4edda',
+              color: '#155724',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              ✓ Thank you! Your RSVP has been received.
+            </div>
+          )}
+
+          {submitStatus === 'error' && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '1rem',
+              background: '#f8d7da',
+              color: '#721c24',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              ⚠ Something went wrong. Please try again or contact us directly.
+            </div>
+          )}
+        </div>
+
+        <div style={{
+          marginTop: '2rem',
+          padding: '1rem',
+          background: `${theme.light}80`,
+          borderRadius: '8px',
+          fontSize: '0.9rem'
+        }}>
+          <strong>⚙️ Setup Required:</strong> To enable RSVP submissions:
+          <ol style={{marginTop: '0.5rem', marginLeft: '1.5rem'}}>
+            <li>Create a Notion account at notion.so</li>
+            <li>Create a database with columns: Name, Email, Attending, Guests, Dietary, Message</li>
+            <li>Get your API key from notion.so/my-integrations</li>
+            <li>Share your database with the integration</li>
+            <li>Replace NOTION_API_KEY and DATABASE_ID in the code</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ALBUMS PAGE
+  const AlbumsPage = () => (
+    <div style={styles.content}>
+      <h1 style={{textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '2rem'}}>
+        <Camera size={40} style={{verticalAlign: 'middle', marginRight: '1rem'}} />
+        Wedding Albums
+      </h1>
+
+      {!isAfterWedding ? (
+        <div style={styles.card}>
+          <div style={{textAlign: 'center', padding: '3rem 1rem'}}>
+            <Clock size={64} color={theme.primary} style={{margin: '0 auto 1rem'}} />
+            <h2 style={{color: theme.primary, marginBottom: '1rem'}}>Coming Soon!</h2>
+            <p style={{fontSize: '1.1rem', color: '#666'}}>
+              Wedding photos will be available here after June 12, 2026.
+              <br />Check back after the big day!
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={styles.card}>
+            <h2 style={{color: theme.primary, marginBottom: '1rem'}}>Professional Photos</h2>
+            <p style={{marginBottom: '1.5rem'}}>View and download our professional wedding photos from Lightroom:</p>
+            <button 
+              onClick={() => window.open('https://lightroom.adobe.com/shares/YOUR_LIGHTROOM_LINK', '_blank')}
+              style={styles.button}
+            >
+              Open Lightroom Album
+            </button>
+            <p style={{fontSize: '0.9rem', color: '#666', marginTop: '1rem'}}>
+              Note: Replace with your actual Lightroom share link
+            </p>
+          </div>
+
+          <div style={styles.card}>
+            <h2 style={{color: theme.primary, marginBottom: '1rem'}}>Guest Photos</h2>
+            <p style={{marginBottom: '1.5rem'}}>Share your favorite moments with us!</p>
+            <button 
+              onClick={() => window.open('https://photos.google.com/share/YOUR_GOOGLE_PHOTOS_LINK', '_blank')}
+              style={styles.button}
+            >
+              Upload Your Photos
+            </button>
+            <p style={{fontSize: '0.9rem', color: '#666', marginTop: '1rem'}}>
+              Create a shared Google Photos album for guest uploads
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  // Render current page
+  const renderPage = () => {
+    switch(currentPage) {
+      case 'home': return <HomePage />;
+      case 'info': return <InfoPage />;
+      case 'gifts': return <GiftsPage />;
+      case 'rsvp': return <RSVPPage />;
+      case 'albums': return <AlbumsPage />;
+      default: return <HomePage />;
+    }
+  };
+
+  return (
+    <div style={styles.container}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&display=swap');
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        @media (min-width: 768px) {
+          .nav-links-desktop {
+            display: flex !important;
+            flex-direction: row !important;
+            position: static !important;
+            background: transparent !important;
+            gap: 1rem !important;
+          }
+          .menu-button {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      <header style={styles.header}>
+        <nav style={styles.nav}>
+          <div style={styles.logo} onClick={() => navigate('home')}>J-D & A-N</div>
+          
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)} 
+            style={styles.menuButton}
+            className="menu-button"
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+
+          <div style={styles.navLinks} className="nav-links-desktop">
+            <div onClick={() => navigate('home')} style={{...styles.navLink, background: currentPage === 'home' ? `${theme.accent}40` : 'transparent'}}>Home</div>
+            <div onClick={() => navigate('info')} style={{...styles.navLink, background: currentPage === 'info' ? `${theme.accent}40` : 'transparent'}}>Wedding Info</div>
+            <div onClick={() => navigate('gifts')} style={{...styles.navLink, background: currentPage === 'gifts' ? `${theme.accent}40` : 'transparent'}}>Gifts</div>
+            <div onClick={() => navigate('rsvp')} style={{...styles.navLink, background: currentPage === 'rsvp' ? `${theme.accent}40` : 'transparent'}}>RSVP</div>
+            {isAfterWedding && (
+              <div onClick={() => navigate('albums')} style={{...styles.navLink, background: currentPage === 'albums' ? `${theme.accent}40` : 'transparent'}}>Albums</div>
+            )}
+          </div>
+        </nav>
+      </header>
+
+      {renderPage()}
+
+      <footer style={{
+        textAlign: 'center',
+        padding: '2rem',
+        color: '#666',
+        fontSize: '0.9rem'
+      }}>
+        <Heart size={20} color={theme.primary} style={{verticalAlign: 'middle', marginRight: '0.5rem'}} />
+        J-D KOA & A-N Teu | June 12, 2026
+        <div style={{marginTop: '1rem', fontSize: '0.8rem'}}>
+          <button 
+            onClick={() => setActiveTheme(activeTheme === 'warm' ? 'ocean' : activeTheme === 'ocean' ? 'neutral' : 'warm')}
+            style={{...styles.button, padding: '0.5rem 1rem', fontSize: '0.8rem'}}
+          >
+            Switch Theme
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default WeddingWebsite;
