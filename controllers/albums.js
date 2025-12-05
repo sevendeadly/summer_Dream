@@ -25,33 +25,59 @@ export class AlbumsController {
 
     // Show albums after wedding
     showAlbums() {
-        this.albumsContent.innerHTML = `
-            <div class="albums-grid">
-                <div class="album-card">
-                    <h3>📸 Ceremony</h3>
-                    <p>Beautiful moments from our ceremony</p>
-                    <a href="${ALBUM_LINKS.ceremony}" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
-                    <a href="#" class="btn-small" data-album="ceremony">Download</a>
+        // Normalize ALBUM_LINKS to an array of { key, url }
+        const albums = Array.isArray(ALBUM_LINKS)
+            ? ALBUM_LINKS.map((url, i) => ({ key: String(i), url }))
+            : Object.entries(ALBUM_LINKS).map(([key, url]) => ({ key, url }));
+
+        const niceTitle = (key) => {
+            const map = {
+                ceremony: '📸 Ceremony',
+                reception: '🎉 Reception',
+                couple: '💑 Couple Photos',
+                guests: '🎊 Guest Photos',
+                graduation: '🎓 Graduation Photos'
+            };
+            if (map[key]) return map[key];
+            return key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        };
+
+        const niceDescription = (key) => {
+            const map = {
+                ceremony: 'Beautiful moments from our ceremony',
+                reception: 'Fun times at the reception',
+                couple: 'Special moments together',
+                guests: 'Candid shots from our guests',
+                graduation: 'Memorable graduation photos'
+            };
+            return map[key] || `Photos for ${niceTitle(key)}`;
+        };
+
+        // Build HTML using forEach so every element in ALBUM_LINKS is processed
+        let html = '<div class="albums-grid">';
+        albums.forEach(({ key, url }) => {
+            const title = niceTitle(key);
+            const desc = niceDescription(key);
+            const href = url || '#';
+            html += `
+                <div class="album-card" style="
+                    display:flex;
+                    flex-direction:column;
+                    align-items:center;
+                    justify-content:center;
+                    text-align:center;
+                    padding:20px;
+                ">
+                    <h3 style="margin:0 0 8px;">${title}</h3>
+                    <p style="margin:0 0 12px; max-width:260px;">${desc}</p>
+                    <a href="${href}" class="btn" target="_blank" rel="noopener noreferrer" style="margin:6px 0;">View Album</a>
+                    <a href="#" class="btn-small" data-album="${key}" style="margin-top:6px;">Download</a>
                 </div>
-                <div class="album-card">
-                    <h3>🎉 Reception</h3>
-                    <p>Fun times at the reception</p>
-                    <a href="${ALBUM_LINKS.reception}" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
-                    <a href="#" class="btn-small" data-album="reception">Download</a>
-                </div>
-                <div class="album-card">
-                    <h3>💑 Couple Photos</h3>
-                    <p>Special moments together</p>
-                    <a href="${ALBUM_LINKS.couple}" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
-                    <a href="#" class="btn-small" data-album="couple">Download</a>
-                </div>
-                <div class="album-card">
-                    <h3>🎊 Guest Photos</h3>
-                    <p>Candid shots from our guests</p>
-                    <a href="${ALBUM_LINKS.guests}" class="btn" target="_blank" rel="noopener noreferrer">View Album</a>
-                    <a href="#" class="btn-small" data-album="guests">Download</a>
-                </div>
-            </div>
+            `;
+        });
+        html += '</div>';
+
+        html += `
             <div class="info-card" style="margin-top: 40px;">
                 <h2>📝 Instructions</h2>
                 <p>To add your photo galleries:</p>
@@ -63,6 +89,8 @@ export class AlbumsController {
                 </ol>
             </div>
         `;
+
+        this.albumsContent.innerHTML = html;
 
         // Setup download button listeners
         this.setupDownloadButtons();

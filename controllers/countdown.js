@@ -28,7 +28,7 @@ export class CountdownController {
 
         if (distance < 0) {
             // Wedding has passed
-            this.countdownElement.innerHTML = '<p style="font-size: 1.5em;">We\'re Married! 🎉</p>';
+            this.countdownElement.innerHTML = '<p style="font-size: 4em;">We\'re Married!!!!!!! 🎉</p>';
             return;
         }
 
