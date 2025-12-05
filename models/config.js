@@ -28,6 +28,7 @@ export const ALBUM_LINKS = {
     reception: 'https://lightroom.adobe.com/your-reception-album',
     couple: 'https://lightroom.adobe.com/your-couple-album',
     guests: 'https://lightroom.adobe.com/your-guest-album',
+    graduation: 'https://lightroom.adobe.com/shares/d505f5c91fbe4317a7e0e7f7c0081a63'
 };
 
 // Theme Palettes Configuration
