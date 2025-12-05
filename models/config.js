@@ -21,7 +21,7 @@ export const PAYMENT_LINKS = {
 
 // Wedding Date - June 12, 2026 at 3:30 PM (ceremony time)
 // Update the time (15:30:00) if your ceremony starts at a different time
-export const WEDDING_DATE = new Date('2025-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2022-06-12T15:30:00').getTime();
 
 // Album configuration - Update these links after the wedding
 export const ALBUM_LINKS = {
