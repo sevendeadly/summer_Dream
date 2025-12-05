@@ -7,7 +7,7 @@
 // For production, use serverless functions (Netlify/Vercel/AWS Lambda)
 // See docs/NOTION_INTEGRATION.md for secure setup instructions
 export const NOTION_CONFIG = {
-    apiKey: $NOTION_API_KEY, // Keep empty - use serverless function instead
+    apiKey: '$NOTION_API_KEY', // Keep empty - use serverless function instead
     databaseId: '2818c2209cb9816d85c1ca56bd3f5c27', // Database ID can be here (not sensitive)
 };
 // https://www.notion.so/2818c2209cb9816d85c1ca56bd3f5c27?v=2c08c2209cb980149296000c4799cb3e&source=copy_link
