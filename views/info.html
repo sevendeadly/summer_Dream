@@ -33,9 +33,12 @@
                     <h2>📍 Venue</h2>
                     <h3>Ceremony & Reception</h3>
                     <p><strong>[Venue Name]</strong></p>
-                    <p>[Venue Address]</p>
-                    <p>[City, State, ZIP]</p>
-                    <a href="#" class="btn">Get Directions</a>
+                    <p>Us, Ile-de-France</p>
+                    <p>Us, Ile-de-France</p>
+                    <div class="venue-buttons">
+                        <a href="https://www.google.fr/maps/dir//Val-d'Oise/@49.0750366,1.7722441,10z" class="btn">Get Directions</a>
+                        <button id="btn-itinerary" class="btn" style="cursor: pointer;">Get Itinerary</button>
+                    </div>
                 </div>
 
                 <div class="info-card">
@@ -61,12 +64,27 @@
 
                 <div class="info-card">
                     <h2>👔 Dress Code</h2>
-                    <p><strong>Semi-Formal / Cocktail Attire</strong></p>
+                    <p><strong>Formal / Cocktail Attire</strong></p>
                     <p>Please wear what makes you feel comfortable and celebratory!</p>
                     <ul>
                         <li>For guests: Suits, dress shirts, dresses, or dressy separates</li>
                         <li>Colors: Feel free to wear any colors you like</li>
                     </ul>
+                    
+                    <div class="attire-colors-section">
+                        <p style="margin-top: 20px; margin-bottom: 10px;"><strong>Choose your attire colors:</strong></p>
+                        <div class="color-palette-container">
+                            <div class="color-sphere" data-color="#d4a5a5" data-name="Dusty Rose" title="Dusty Rose"></div>
+                            <div class="color-sphere" data-color="#c9a86a" data-name="Warm Gold" title="Warm Gold"></div>
+                            <div class="color-sphere" data-color="#93a89d" data-name="Garden Sage" title="Garden Sage"></div>
+                            <div class="color-sphere" data-color="#c97653" data-name="Terracotta" title="Terracotta"></div>
+                            <div class="color-sphere" data-color="#5e8b9a" data-name="Ocean Blue" title="Ocean Blue"></div>
+                            <div class="color-sphere" data-color="#e8927c" data-name="Coral" title="Coral"></div>
+                        </div>
+                        <div class="selected-colors-display">
+                            <p><strong>Selected colors:</strong> <span id="selected-colors-list">None yet</span></p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="info-card">
@@ -112,7 +130,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Summer & Dream | Made with ❤️</p>
+        <p>&copy; 2026 Summer Dream | Made with ❤️</p>
     </footer>
 
     <script type="module" src="../app.js"></script>
