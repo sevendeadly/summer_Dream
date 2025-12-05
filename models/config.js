@@ -7,20 +7,21 @@
 // For production, use serverless functions (Netlify/Vercel/AWS Lambda)
 // See docs/NOTION_INTEGRATION.md for secure setup instructions
 export const NOTION_CONFIG = {
-    apiKey: '', // Keep empty - use serverless function instead
-    databaseId: '', // Database ID can be here (not sensitive)
+    apiKey: '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', // Keep empty - use serverless function instead
+    databaseId: '2818c2209cb9816d85c1ca56bd3f5c27', // Database ID can be here (not sensitive)
 };
-
+// https://www.notion.so/2818c2209cb9816d85c1ca56bd3f5c27?v=2c08c2209cb980149296000c4799cb3e&source=copy_link
+//  2c08c220-9cb9-8083-8732-000b1edfb57d
 // Payment Links Configuration
 export const PAYMENT_LINKS = {
-    paypal: '', // Add your PayPal.me link or donation link
-    wise: '', // Add your Wise payment link
-    wero: '', // Add your Wero payment link or phone number
+    paypal: 'https://www.paypal.com/paypalme/danielkoanga', // Add your PayPal.me link or donation link
+    wise: 'https://wise.com/pay/me/josuedanielk', // Add your Wise payment link
+    wero: '07304.xx.xx', // Add your Wero payment link or phone number
 };
 
 // Wedding Date - June 12, 2026 at 3:30 PM (ceremony time)
 // Update the time (15:30:00) if your ceremony starts at a different time
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2025-06-12T15:30:00').getTime();
 
 // Album configuration - Update these links after the wedding
 export const ALBUM_LINKS = {
@@ -36,8 +37,8 @@ export const THEME_PALETTES = {
     palette1: {
         name: 'Romantic Blush & Gold',
         primary: '#d4a5a5',
-        secondary: '#c9a86a',
-        accent: '#ffffff',
+        secondary: '#ffffff',
+        accent: '#c9a86a',
         textDark: '#2c2c2c',
         textLight: '#666666',
         background: '#faf8f5',

@@ -8,6 +8,7 @@ import { RSVPController } from './controllers/rsvp.js';
 import { AlbumsController } from './controllers/albums.js';
 import { UtilityController } from './controllers/utility.js';
 import { ThemeController } from './controllers/theme.js';
+import { InfoController } from './controllers/info.js';
 
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,6 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize RSVP form
     const rsvpController = new RSVPController();
     rsvpController.init();
+
+    // Initialize info page
+    const infoController = new InfoController();
+    infoController.init();
 
     // Initialize albums page
     const albumsController = new AlbumsController();
