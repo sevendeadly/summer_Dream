@@ -70,6 +70,10 @@ export class InfoController {
         if (this.colorSpheres.length === 0) return;
 
         this.colorSpheres.forEach(sphere => {
+            // Set background color from data-color attribute
+            const color = sphere.getAttribute('data-color');
+            sphere.style.backgroundColor = color;
+
             sphere.addEventListener('click', () => {
                 this.toggleColorSelection(sphere);
             });
