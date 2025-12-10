@@ -1,0 +1,10 @@
+{
+  "name": "summer-dream-website",
+  "version": "1.0.0",
+  "description": "J-D & A-N Wedding Website",
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "nodemailer": "^6.9.8"
+  },
+  "devDependencies": {}
+}

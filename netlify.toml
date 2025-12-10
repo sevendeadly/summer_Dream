@@ -1,0 +1,11 @@
+[build]
+  functions = "controllers/netlify_func"
+  publish = "views"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/admin"
+  to = "/views/admin_dashboard.html"
+  status = 200
