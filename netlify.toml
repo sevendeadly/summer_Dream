@@ -1,5 +1,5 @@
 [build]
-  functions = "controllers/netlify_func"
+  functions = "controllers/netlify-func"
   publish = "views"
 
 [build.environment]

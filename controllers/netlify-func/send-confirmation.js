@@ -1,9 +1,10 @@
 // ===========================
-// NETLIFY FUNCTION: Send Confirmation Email
-// File: netlify/functions/send-confirmation.js
+// NETLIFY FUNCTION: Send Confirmation Email (SendGrid)
+// File: controllers/netlify-func/send-confirmation.js
+// Uses SendGrid API (free tier: 100 emails/day)
 // ===========================
 
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 exports.handler = async (event, context) => {
   // Only allow POST requests
@@ -15,11 +16,16 @@ exports.handler = async (event, context) => {
   }
 
   // Get environment variables
-  const EMAIL_HOST = process.env.EMAIL_HOST;
-  const EMAIL_PORT = process.env.EMAIL_PORT;
-  const EMAIL_USER = process.env.EMAIL_USER;
-  const EMAIL_PASS = process.env.EMAIL_PASS;
-  const ADMIN_SECRET = process.env.ADMIN_SECRET; // Secret key for authorization
+  const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+  const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@yourwedding.com';
+  const ADMIN_SECRET = process.env.ADMIN_SECRET;
+  
+  if (!SENDGRID_API_KEY) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'SendGrid API key not configured' }),
+    };
+  }
 
   try {
     const data = JSON.parse(event.body);
@@ -32,24 +38,18 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const transporter = nodemailer.createTransport({
-      host: EMAIL_HOST,
-      port: EMAIL_PORT,
-      secure: false,
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS,
-      },
-    });
+    // Initialize SendGrid
+    sgMail.setApiKey(SENDGRID_API_KEY);
 
     // Email template based on attendance
     const emailTemplate = data.attending === 'yes' 
       ? getAcceptedTemplate(data)
       : getDeclinedTemplate(data);
 
-    await transporter.sendMail({
-      from: `"J-D & A-N Wedding" <${EMAIL_USER}>`,
+    // Send email via SendGrid
+    await sgMail.send({
       to: data.email,
+      from: SENDGRID_FROM_EMAIL,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
     });

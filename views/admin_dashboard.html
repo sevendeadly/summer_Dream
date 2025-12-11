@@ -317,7 +317,7 @@
         </div>
     </div>
 
-    <script>
+    <!--<script>
         let adminSecret = '';
         let allRSVPs = [];
 
@@ -536,6 +536,15 @@
                 alert('Error sending confirmation email');
             }
         }
+    </script> -->
+
+    <!-- Import Admin Controller -->
+    <script type="module">
+        import { AdminController } from '../controllers/admin.js';
+        
+        // Initialize admin controller
+        window.adminController = new AdminController();
+        window.adminController.init();
     </script>
 </body>
 </html>
