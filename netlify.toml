@@ -1,6 +1,6 @@
 [build]
   functions = "controllers/netlify-func"
-  publish = "views"
+  publish = "."
 
 [build.environment]
   NODE_VERSION = "18"
@@ -9,3 +9,8 @@
   from = "/admin"
   to = "/views/admin_dashboard.html"
   status = 200
+
+# SPA fallback - route all non-file requests to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"

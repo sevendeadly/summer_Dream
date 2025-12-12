@@ -6,17 +6,17 @@
     <title>Wedding Info - Summer & Dream</title>
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
-<!--  TO DO: Homepage nav bar to be black -->
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <ul class="nav-menu">
-                <li><a href="index.html">Home</a></li>
+                <li><a href="../index.html">Home</a></li>
                 <li><a href="info.html" class="active">Wedding Info</a></li>
                 <li><a href="gift.html">Gift Pot</a></li>
                 <li><a href="rsvp.html">RSVP</a></li>
                 <li><a href="albums.html">Albums</a></li>
             </ul>
+            <a href="admin_dashboard.html" class="admin-btn">Admin</a>
         </div>
     </nav>
 
@@ -35,10 +35,8 @@
                     <h3>Ceremony & Reception</h3>
                     <p><strong>[Venue Name]</strong></p>
                     <p>Us, Ile-de-France</p>
-                    <p>Us, Ile-de-France</p>
                     <div class="venue-buttons">
-                        <a href="https://www.google.fr/maps/dir//Val-d'Oise/@49.0750366,1.7722441,10z" class="btn">Get Directions
-                        <button id="btn-itinerary" class="btn" style="cursor: pointer;">Get Itinerary</button></a>
+                        <button id="btn-itinerary" class="btn" style="cursor: pointer;">Get Itinerary</button>
                     </div>
                 </div>
 
@@ -72,29 +70,34 @@
                         <div class="dresscode-images">
                             <img src="../assets/images/1.png" alt="Women's Dress Code" title="Women's Dress Code">
                         </div>
+
                         
-                    </div>
-                    <div class="dresscode-images-container">
-                        <div class="dresscode-images">
-                            <div class="dresscode-images">
-                            <img src="../assets/images/2.png" alt="Men's Dress Code" title="Men's Dress Code">
-                        </div>
                     </div>
                     <div class="attire-colors-section">
                         <p style="margin-top: 20px; margin-bottom: 10px;"><strong>Choose your attire colors:</strong></p>
+
                         <div class="color-palette-container">
-                            <div class="color-sphere" data-color="#d4a5a5" data-name="Dusty Rose" title="Dusty Rose"></div>
-                            <div class="color-sphere" data-color="#c9a86a" data-name="Warm Gold" title="Warm Gold"></div>
-                            <div class="color-sphere" data-color="#93a89d" data-name="Garden Sage" title="Garden Sage"></div>
-                            <div class="color-sphere" data-color="#c97653" data-name="Terracotta" title="Terracotta"></div>
-                            <div class="color-sphere" data-color="#5e8b9a" data-name="Ocean Blue" title="Ocean Blue"></div>
-                            <div class="color-sphere" data-color="#e8927c" data-name="Coral" title="Coral"></div>
+                            
                             <div class="color-sphere" data-color="#d7b8d3" data-name="Mauve" title="Mauve"></div>
                             <div class="color-sphere" data-color="#053548" data-name="Deep Navy" title="Deep Navy"></div>
                             <div class="color-sphere" data-color="#fd7ca2" data-name="Hot Pink" title="Hot Pink"></div>
                             <div class="color-sphere" data-color="#a81134" data-name="Burgundy" title="Burgundy"></div>
                             <div class="color-sphere" data-color="#62671e" data-name="Olive Green" title="Olive Green"></div>
                             <div class="color-sphere" data-color="#e5cab1" data-name="Peach" title="Peach"></div>
+                            <div class="color-sphere" data-color="#000000" data-name="Black" title="Black"></div>
+                        </div>
+
+                        
+                    </div>
+                    <div class="dresscode-images-container">
+                        <div class="dresscode-images">
+                            <img src="../assets/images/2.png" alt="Men's Dress Code" title="Men's Dress Code">
+                        </div>
+                    </div>
+                    <div class="attire-colors-section">
+                        <p style="margin-top: 20px; margin-bottom: 10px;"><strong>Choose your attire colors:</strong></p>
+                        <div class="color-palette-container">
+                            
                             <div class="color-sphere" data-color="#dfd3c7" data-name="Beige" title="Beige"></div>
                             <div class="color-sphere" data-color="#23283a" data-name="Charcoal" title="Charcoal"></div>
                             <div class="color-sphere" data-color="#3D3F35" data-name="Dark Olive" title="Dark Olive"></div>
@@ -103,7 +106,6 @@
                             <div class="color-sphere" data-color="#000000" data-name="Black" title="Black"></div>
                             <div class="color-sphere" data-color="#b6c3d5" data-name="Steel Blue" title="Steel Blue"></div>
                         </div>
-                        <!-- TODO: The colors selectors do not displays the colors in the round circles provided when clicked on as its supposed to.-->
                         <div class="selected-colors-display">
                             <p><strong>Selected colors:</strong> <span id="selected-colors-list">None yet</span></p>
                         </div>
