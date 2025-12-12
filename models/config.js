@@ -21,7 +21,7 @@ export const PAYMENT_LINKS = {
 
 // Wedding Date - June 12, 2026 at 3:30 PM (ceremony time)
 // Update the time (15:30:00) if your ceremony starts at a different time
-export const WEDDING_DATE = new Date('2022-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
 
 // Album configuration - Update these links after the wedding
 export const ALBUM_LINKS = {
@@ -34,21 +34,11 @@ export const ALBUM_LINKS = {
 
 // Theme Palettes Configuration
 export const THEME_PALETTES = {
-    palette1: {
-        name: 'Romantic Blush & Gold',
-        primary: '#d4a5a5',
-        secondary: '#ffffff',
-        accent: '#c9a86a',
-        textDark: '#2c2c2c',
-        textLight: '#666666',
-        background: '#faf8f5',
-        cardBackground: '#ffffff',
-        borderColor: '#e8d5d5'
-    },
+    
     palette2: {
         name: 'Garden Sage & Terracotta',
         primary: '#93a89d',
-        secondary: '#c97653',
+        secondary: '#c976538c',
         accent: '#f5f1e8',
         textDark: '#2c2c2c',
         textLight: '#666666',
@@ -59,7 +49,7 @@ export const THEME_PALETTES = {
     palette3: {
         name: 'Ocean Blue & Coral',
         primary: '#5e8b9a',
-        secondary: '#e8927c',
+        secondary: '#e8927c8c',
         accent: '#ffffff',
         textDark: '#2c2c2c',
         textLight: '#666666',
