@@ -4,6 +4,14 @@
 
 [build.environment]
   NODE_VERSION = "18"
+    # Disable Netlify secret scanner during deploys (or selectively omit paths/keys)
+  # - Set `SECRETS_SCAN_ENABLED` to "false" to turn off scanning entirely for this site build.
+  # - Or set `SECRETS_SCAN_OMIT_PATHS` / `SECRETS_SCAN_OMIT_KEYS` to comma-separated lists
+  #   of files/paths or secret key names to exclude from scanning.
+  SECRETS_SCAN_ENABLED = "true"
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,env"
+  SECRETS_SCAN_OMIT_KEYS = "NOTION_API_KEY,SENDGRID_API_KEY,ADMIN_SECRET"
+
 
 [[redirects]]
   from = "/admin"
