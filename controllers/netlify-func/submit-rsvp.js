@@ -1,10 +1,39 @@
 // ===========================
-// NETLIFY FUNCTION: RSVP Submission with Email
-// File: netlify/functions/submit-rsvp.js
+// NETLIFY FUNCTION: RSVP Submission
+// File: controllers/netlify-func/submit-rsvp.js
+// Stores RSVPs in Netlify Blob Storage
 // ===========================
 
-const { Client } = require('@notionhq/client');
-const nodemailer = require('nodemailer');
+const { getStore } = require('@netlify/blobs');
+
+// Validate RSVP data
+function validateRSVPData(data) {
+  const errors = [];
+
+  if (!data.name || data.name.trim() === '') {
+    errors.push('Name is required');
+  }
+
+  if (!data.email || data.email.trim() === '') {
+    errors.push('Email is required');
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    errors.push('Email is invalid');
+  }
+
+  if (!data.attending || !['yes', 'no'].includes(data.attending)) {
+    errors.push('Attendance selection is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
+}
+
+// Generate unique ID for RSVP
+function generateId() {
+  return `rsvp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
 
 exports.handler = async (event, context) => {
   // Only allow POST requests
@@ -15,92 +44,58 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Get environment variables
-  const NOTION_API_KEY = process.env.NOTION_API_KEY;
-  const DATABASE_ID = process.env.NOTION_DATABASE_ID;
-  const EMAIL_HOST = process.env.EMAIL_HOST; // e.g., smtp.gmail.com
-  const EMAIL_PORT = process.env.EMAIL_PORT; // e.g., 587
-  const EMAIL_USER = process.env.EMAIL_USER; // Your email
-  const EMAIL_PASS = process.env.EMAIL_PASS; // Your email password/app password
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL; // Your admin email
-
-  // Validate environment variables
-  if (!NOTION_API_KEY || !DATABASE_ID) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ 
-        error: 'Server configuration missing' 
-      }),
-    };
-  }
-
-  const notion = new Client({ auth: NOTION_API_KEY });
-
   try {
     const data = JSON.parse(event.body);
 
-    // Create Notion entry
-    const notionResponse = await notion.pages.create({
-      parent: { database_id: DATABASE_ID },
-      properties: {
-        Name: { title: [{ text: { content: data.name } }] },
-        Email: { email: data.email },
-        Phone: { phone_number: data.phone || '' },
-        Attending: { select: { name: data.attending } },
-        Guests: { number: parseInt(data.guests) || 1 },
-        Dietary: { rich_text: [{ text: { content: data.dietary || '' } }] },
-        Message: { rich_text: [{ text: { content: data.message || '' } }] },
-        'Submitted At': { date: { start: data.submittedAt } },
-        Status: { select: { name: 'Pending Review' } }, // Add this column in Notion
-      },
-    });
-
-    // Send notification to admin
-    if (EMAIL_HOST && EMAIL_USER && EMAIL_PASS && ADMIN_EMAIL) {
-      const transporter = nodemailer.createTransport({
-        host: EMAIL_HOST,
-        port: EMAIL_PORT,
-        secure: false,
-        auth: {
-          user: EMAIL_USER,
-          pass: EMAIL_PASS,
-        },
-      });
-
-      await transporter.sendMail({
-        from: EMAIL_USER,
-        to: ADMIN_EMAIL,
-        subject: `New RSVP: ${data.name}`,
-        html: `
-          <h2>New RSVP Submission</h2>
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
-          <p><strong>Attending:</strong> ${data.attending}</p>
-          <p><strong>Guests:</strong> ${data.guests}</p>
-          <p><strong>Dietary:</strong> ${data.dietary || 'None'}</p>
-          <p><strong>Message:</strong> ${data.message || 'No message'}</p>
-          <hr>
-          <p>View in Notion: <a href="https://notion.so/${DATABASE_ID}">Open Database</a></p>
-          <p>Notion Page ID: ${notionResponse.id}</p>
-        `,
-      });
+    // Validate RSVP data
+    const validation = validateRSVPData(data);
+    if (!validation.isValid) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          errors: validation.errors
+        }),
+      };
     }
+
+    // Create RSVP object
+    const rsvpId = generateId();
+    const rsvp = {
+      id: rsvpId,
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      phone: (data.phone || '').trim(),
+      attending: data.attending,
+      guests: parseInt(data.guests) || 1,
+      dietary: (data.dietary || '').trim(),
+      message: (data.message || '').trim(),
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+      approvedAt: null
+    };
+
+    // Store in Netlify Blob Storage
+    const store = getStore('rsvps');
+    await store.set(rsvpId, JSON.stringify(rsvp));
+
+    console.log(`✅ RSVP stored: ${rsvpId} - ${rsvp.name} (${rsvp.email})`);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         success: true,
-        pageId: notionResponse.id 
+        id: rsvpId,
+        message: 'RSVP received! Admin will send confirmation soon.'
       }),
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Error storing RSVP:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      body: JSON.stringify({
+        success: false,
+        error: 'Failed to store RSVP. Please try again.'
       }),
     };
   }

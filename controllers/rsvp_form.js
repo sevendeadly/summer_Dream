@@ -2,7 +2,6 @@
 // RSVP CONTROLLER
 // ===========================
 
-import { NOTION_CONFIG } from '../models/config.js';
 import { RSVPData } from '../models/rsvp.js';
 
 export class RSVPController {
@@ -80,26 +79,14 @@ export class RSVPController {
                 return;
             }
 
-            // Check if Notion is configured
-            if (!NOTION_CONFIG.apiKey || !NOTION_CONFIG.databaseId) {
-                // Show success message even without Notion (for testing)
-                this.showSuccess('Thank you for your RSVP! (Note: Notion integration not configured yet - see setup instructions below)');
-                
-                // Log the data for testing
-                console.log('RSVP Data (not saved):', rsvpData.toJSON());
-                
-                // Reset form
+            // Submit to Netlify function
+            const response = await this.submitRSVP(rsvpData.toJSON());
+            
+            if (response.success) {
+                this.showSuccess('Thank you for your RSVP! We can\'t wait to celebrate with you! 🎉');
                 this.form.reset();
             } else {
-                // Submit to Notion
-                const response = await this.submitToNotion(rsvpData.toJSON());
-                
-                if (response.success) {
-                    this.showSuccess('Thank you for your RSVP! We can\'t wait to celebrate with you! 🎉');
-                    this.form.reset();
-                } else {
-                    throw new Error('Submission failed');
-                }
+                throw new Error('Submission failed');
             }
         } catch (error) {
             this.showError('Oops! Something went wrong. Please try again or contact us directly.');
@@ -110,41 +97,26 @@ export class RSVPController {
         }
     }
 
-    // Submit to Notion API
-    async submitToNotion(data) {
-        // This is a client-side example. For production, you should create a serverless function
-        // (e.g., Netlify Functions, Vercel Serverless Functions, or AWS Lambda) to handle Notion API calls
-        // to keep your API key secure.
-        
-        // Example structure for serverless function:
-        /*
-        const response = await fetch('/.netlify/functions/submit-rsvp', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-        
-        return await response.json();
-        */
-       const response = await fetch('/.netlify/functions/submit-rsvp', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-        
-        return await response.json();
-
-        /**
-         * // For now, return a mock response
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({ success: true });
-            }, 1000);
-        });*/
+    // Submit RSVP to Netlify function
+    async submitRSVP(data) {
+        try {
+            const response = await fetch('/.netlify/functions/submit-rsvp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error submitting RSVP:', error);
+            throw error;
+        }
     }
 
     // Show success message

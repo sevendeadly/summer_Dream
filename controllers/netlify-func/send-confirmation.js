@@ -1,10 +1,11 @@
 // ===========================
 // NETLIFY FUNCTION: Send Confirmation Email (SendGrid)
 // File: controllers/netlify-func/send-confirmation.js
-// Uses SendGrid API (free tier: 100 emails/day)
+// Sends confirmation emails via SendGrid and updates RSVP status
 // ===========================
 
 const sgMail = require('@sendgrid/mail');
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
   // Only allow POST requests
@@ -32,6 +33,7 @@ exports.handler = async (event, context) => {
 
     // Verify admin secret
     if (data.adminSecret !== ADMIN_SECRET) {
+      console.warn('⚠️ Unauthorized confirmation attempt');
       return {
         statusCode: 401,
         body: JSON.stringify({ error: 'Unauthorized' }),
@@ -54,12 +56,29 @@ exports.handler = async (event, context) => {
       html: emailTemplate.html,
     });
 
+    // Update RSVP status in storage
+    if (data.rsvpId) {
+      const store = getStore('rsvps');
+      const rsvpData = await store.get(data.rsvpId);
+      
+      if (rsvpData) {
+        const rsvp = JSON.parse(rsvpData);
+        rsvp.status = data.attending === 'yes' ? 'approved' : 'declined';
+        rsvp.approvedAt = new Date().toISOString();
+        
+        await store.set(data.rsvpId, JSON.stringify(rsvp));
+        console.log(`✅ RSVP ${data.rsvpId} updated to ${rsvp.status}`);
+      }
+    }
+
+    console.log(`📧 Confirmation email sent to ${data.email}`);
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true }),
+      body: JSON.stringify({ success: true, message: 'Email sent and RSVP updated' }),
     };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ Error sending email:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ 

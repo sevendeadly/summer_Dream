@@ -10,7 +10,7 @@
 2. [Configuration Files](#configuration-files)
 3. [Environment Variables](#environment-variables)
 4. [Netlify Functions Setup](#netlify-functions-setup)
-5. [Notion Database Setup](#notion-database-setup)
+5. [RSVP Storage System](#rsvp-storage-system)
 6. [Email Service Configuration](#email-service-configuration)
 7. [Deployment Process](#deployment-process)
 8. [Admin Dashboard Setup](#admin-dashboard-setup)
@@ -42,9 +42,8 @@ npm install
 ```
 
 This installs:
-- `@notionhq/client` - Notion API
-- `nodemailer` - Email sending
-- Any other project dependencies
+- `@sendgrid/mail` - SendGrid email service
+- Other project dependencies
 
 ### Step 3: Local Testing
 
@@ -72,18 +71,12 @@ Visit: `http://localhost:8000`
 Create this file in your project root:
 
 ```bash
-# Notion Configuration
-NOTION_API_KEY=secret_your_key_here
-NOTION_DATABASE_ID=your_database_id_here
+# SendGrid Email Configuration
+SENDGRID_API_KEY=SG.xxxxx...
+SENDGRID_FROM_EMAIL=noreply@yourwedding.com
 
-# Email Configuration
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-ADMIN_EMAIL=your-email@gmail.com
-
-# Security
+# Admin Configuration
+ADMIN_EMAIL=your-email@example.com
 ADMIN_SECRET=your-secure-password-here
 ```
 
@@ -106,11 +99,6 @@ Located in project root:
   from = "/admin"
   to = "/views/admin_dashboard.html"
   status = 200
-
-[[redirects]]
-  from = "/*.html"
-  to = "/index.html"
-  status = 200
 ```
 
 ### File: `package.json`
@@ -121,8 +109,7 @@ Located in project root:
   "version": "2.1.0",
   "description": "J-D & A-N Wedding Website",
   "dependencies": {
-    "@notionhq/client": "^2.2.15",
-    "nodemailer": "^6.9.8"
+    "@sendgrid/mail": "^7.7.0"
   }
 }
 ```
@@ -157,30 +144,25 @@ Thumbs.db
 # Build
 dist/
 build/
+data/*.json
 ```
 
 ---
 
 ## 🔐 Environment Variables
 
-### Notion API Key
+### SendGrid API Key
 
-1. Go to [Notion Integrations](https://www.notion.so/my-integrations)
-2. Create new integration "Wedding Website"
-3. Copy "Internal Integration Secret"
-4. Format: `secret_xxxxxxxxxxxxx`
+1. Go to [sendgrid.com](https://sendgrid.com/) → Sign up (free tier)
+2. Dashboard → Settings → API Keys → Create API Key
+3. Copy key (starts with `SG.`)
+4. Paste into `.env` as `SENDGRID_API_KEY`
 
-### Notion Database ID
+### SendGrid Sender Email
 
-1. Open RSVP database in Notion
-2. URL: `https://www.notion.so/workspace/[DATABASE_ID]?v=[VIEW_ID]`
-3. Share database with your integration
-
-### Gmail SMTP Configuration
-
-1. Enable 2-Factor Authentication
-2. Generate App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-3. Use 16-character password
+1. Dashboard → Settings → Sender Authentication
+2. Add verified sender email
+3. Use this email in `SENDGRID_FROM_EMAIL`
 
 ### Admin Secret
 
@@ -207,30 +189,31 @@ controllers/netlify-func/
 
 ### Function 1: submit-rsvp.js
 
-**Purpose:** Handle RSVP form submissions
+**Purpose:** Handle RSVP form submissions and store in Netlify Blob Storage
 
 ```javascript
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-  // ... implementation
+  // Validates data and stores in Netlify Blob Storage
+  // Returns success/error response
 };
 ```
 
 **Triggers:** When guest submits RSVP form  
-**Returns:** Confirmation or error message
+**Returns:** `{success: true, id: "rsvp_123"}`
 
 ### Function 2: send-confirmation.js
 
-**Purpose:** Send confirmation emails
+**Purpose:** Send confirmation emails via SendGrid
 
 ```javascript
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-  // ... implementation
+  // Verifies admin secret and sends email
 };
 ```
 
@@ -246,91 +229,73 @@ exports.handler = async (event, context) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-  // ... implementation
+  // Returns all RSVP records from storage
 };
 ```
 
-**Requires:** Admin secret header  
-**Returns:** All RSVP records
+**Requires:** Admin secret header `X-Admin-Secret`  
+**Returns:** Array of RSVP records
 
 ---
 
-## 📊 Notion Database Setup
+## 📊 RSVP Storage System
 
-### Create Database Structure
+### Storage Architecture
 
-| Column | Type | Required | Notes |
-|--------|------|----------|-------|
-| Name | Title | ✅ | Guest name |
-| Email | Email | ✅ | Contact email |
-| Phone | Phone | ⚠️ | Optional |
-| Attending | Select | ✅ | "yes" or "no" |
-| Guests | Number | ✅ | Party size |
-| Dietary | Text | ⚠️ | Restrictions |
-| Message | Text | ⚠️ | Guest message |
-| Submitted At | Date | ✅ | Auto-populated |
-| Status | Select | ✅ | "Pending Review", "Approved", "Declined" |
+RSVPs are stored in **Netlify Blob Storage** with automatic backup to JSON file.
 
-### Select Options
+### Data Structure
 
-**Attending:**
-- yes
-- no
+```json
+{
+  "id": "rsvp_1234567890",
+  "name": "Guest Name",
+  "email": "guest@example.com",
+  "phone": "+1 (555) 123-4567",
+  "attending": "yes",
+  "guests": 2,
+  "dietary": "Vegetarian",
+  "message": "Looking forward to it!",
+  "status": "pending",
+  "submittedAt": "2026-01-15T10:30:00Z",
+  "approvedAt": null
+}
+```
 
-**Status:**
-- Pending Review
-- Approved
-- Declined
+### Retrieval
 
-### Initial Setup Steps
+Admin dashboard fetches via: `GET /.netlify/functions/get-rsvps`
 
-1. Create new database in Notion
-2. Name it "Wedding RSVPs"
-3. Add columns as shown above
-4. Get database ID from URL
-5. Share with integration
+See `docs/RSVP_SYSTEM.md` for complete documentation.
 
 ---
 
 ## 📧 Email Service Configuration
 
-### Option 1: Gmail (Recommended for testing)
+### SendGrid Setup (Recommended)
 
-**Setup:**
-1. Enable 2-Factor Authentication
-2. Generate App Password
-3. Settings: `EMAIL_PASS` = 16-character password
-
-**Advantages:**
-- Free unlimited emails
-- Easy setup
-- Good for testing
-
-**Limitations:**
-- May hit rate limits
-- Emails may go to spam
-- Personal account looks unprofessional
-
-### Option 2: SendGrid (Recommended for production)
-
-**Setup:**
-1. Sign up at [sendgrid.com](https://sendgrid.com)
+1. Sign up at [sendgrid.com](https://sendgrid.com) (free tier: 100/day)
 2. Create API key
-3. Settings: `EMAIL_USER` = "apikey", `EMAIL_PASS` = your API key
+3. Verify sender email
+4. Add to environment variables
 
-**Advantages:**
-- Professional emails
-- Better deliverability
-- Analytics and tracking
-- Free tier: 100 emails/day
+### Email Workflow
 
-**Limitations:**
-- Requires signup
-- Pro tier: ~$15/month after free tier
+```
+Admin clicks "Approve"
+    ↓
+POST to send-confirmation with admin secret
+    ↓
+Function verifies secret
+    ↓
+SendGrid sends email to guest
+    ↓
+Email confirmation delivered
+```
 
-### Option 3: Other Services
+### Email Templates
 
-Mailgun, AWS SES, Resend - Similar setup pattern
+See `controllers/netlify-func/send-confirmation.js` for full HTML templates.
 
 ---
 
@@ -346,10 +311,10 @@ git status
 git add .
 
 # Commit with meaningful message
-git commit -m "Add email confirmation system and admin dashboard"
+git commit -m "Update: Remove Notion integration, use Netlify storage"
 
 # Push to GitHub
-git push origin integrate-to-notion
+git push origin main
 ```
 
 ### Step 2: Connect to Netlify
@@ -363,17 +328,13 @@ git push origin integrate-to-notion
 
 ### Step 3: Set Environment Variables
 
-1. Dashboard → Site settings → Environment
-2. Add variables one by one:
+1. Dashboard → Site settings → Build & Deploy → Environment
+2. Add variables:
 
 ```
-NOTION_API_KEY: secret_xxxx...
-NOTION_DATABASE_ID: xxxx...
-EMAIL_HOST: smtp.gmail.com
-EMAIL_PORT: 587
-EMAIL_USER: your-email@gmail.com
-EMAIL_PASS: your-app-password
-ADMIN_EMAIL: your-email@gmail.com
+SENDGRID_API_KEY: SG.xxxxx...
+SENDGRID_FROM_EMAIL: noreply@yourwedding.com
+ADMIN_EMAIL: your-email@example.com
 ADMIN_SECRET: your-secure-password
 ```
 
@@ -394,34 +355,33 @@ ADMIN_SECRET: your-secure-password
 
 ```
 https://your-site.netlify.app/admin
+or
+https://your-site.netlify.app/views/admin_dashboard.html
 ```
 
 ### First Login
 
-1. Enter your `ADMIN_SECRET`
-2. Click "Login"
-3. Password stored in localStorage
+1. Click "Login to Admin Dashboard"
+2. Enter your `ADMIN_SECRET`
+3. Click "Login"
+4. Password stored in browser localStorage
 
 ### Dashboard Features
 
-**Statistics**
-- Total RSVPs received
-- Guests attending
-- Pending approvals
+- **View RSVPs** - List of all submissions with status
+- **Search** - Filter by name, email, message
+- **Sort** - By submission date, attendance, status
+- **Approve** - Send confirmation email
+- **Decline** - Send decline notification
+- **Statistics** - Total, pending, approved counts
 
-**Actions**
-- View full guest details
-- Approve RSVP (sends confirmation email)
-- Decline RSVP (sends decline email)
-- Search and filter RSVPs
+### Admin Authentication
 
-**Admin Controller** (`controllers/admin.js`)
-
-Handles:
-- Authentication
-- RSVP retrieval from Notion
-- Approval/decline logic
-- Email sending via Netlify function
+Security flow:
+1. Enter admin secret on form
+2. Stored in `localStorage.adminSecret`
+3. All API calls include header: `X-Admin-Secret`
+4. Server validates against environment variable `ADMIN_SECRET`
 
 ---
 
@@ -440,11 +400,10 @@ Handles:
 ### RSVP Form Testing
 
 - [ ] Form fields display correctly
-- [ ] Form validation works
-- [ ] Submit button functional
+- [ ] Form validation shows errors
+- [ ] Submit button is functional
 - [ ] Success message appears
-- [ ] Data appears in Notion
-- [ ] Email notification sent (if enabled)
+- [ ] Data stored in backend
 
 ### Admin Dashboard Testing
 
@@ -523,7 +482,7 @@ git push all changes to GitHub
 - Rotate secrets periodically
 - Keep Netlify updated
 - Monitor function logs
-- Backup Notion regularly
+- Backup RSVPs regularly
 
 ❌ **DON'T:**
 - Share API keys via email
@@ -535,14 +494,15 @@ git push all changes to GitHub
 
 ---
 
-## 📚 Documentation Files
+## 📚 Essential Documentation
 
-- `docs/EMAIL_SYSTEM.md` - Email confirmation setup
-- `docs/DEPLOYMENT.md` - Deployment guide
-- `docs/NOTION_INTEGRATION.md` - Notion API setup
-- `docs/SECURITY.md` - Security best practices
-- `docs/QUICKSTART.md` - Quick start guide
-- `CHANGELOG.md` - Version history
+| Document | Purpose |
+|----------|---------|
+| `docs/RSVP_SYSTEM.md` | RSVP storage and management |
+| `docs/EMAIL_SYSTEM.md` | Email configuration details |
+| `docs/DEPLOYMENT.md` | Deployment troubleshooting |
+| `docs/SECURITY.md` | Security best practices |
+| `.github/copilot-instructions.md` | Project architecture & patterns |
 
 ---
 
@@ -552,41 +512,39 @@ git push all changes to GitHub
 
 **Solution:**
 1. Check `netlify.toml` syntax
-2. Verify `package.json` has all dependencies
+2. Verify `package.json` dependencies
 3. Check Node version in build settings
 4. Review build logs for errors
 
 ### Functions Not Responding
 
 **Solution:**
-1. Check functions deployed in Netlify
-2. Verify environment variables set
-3. Check function logs
-4. Test with curl command
+1. Check functions deployed in Netlify Dashboard
+2. Verify environment variables set correctly
+3. Check function logs at Netlify
+4. Test with curl/Postman
 
 ### Emails Not Sending
 
 **Solution:**
-1. Verify email credentials
-2. Check email service account settings
-3. Review function logs
-4. Try with test email
-5. Check spam folder
+1. Verify `SENDGRID_API_KEY` is correct
+2. Check `SENDGRID_FROM_EMAIL` is verified
+3. Review SendGrid Activity Feed
+4. Check spam folder
 
 ### Admin Dashboard Not Loading
 
 **Solution:**
-1. Clear cache (Ctrl+Shift+Delete)
-2. Check browser console (F12)
-3. Verify Notion API key
-4. Check admin secret
-5. Verify database ID
+1. Clear browser cache (Ctrl+Shift+Delete)
+2. Check browser console (F12) for errors
+3. Verify `ADMIN_SECRET` is set
+4. Try incognito mode
 
 ---
 
 ## 🎉 You're Live!
 
-Congratulations! Your wedding website is now:
+Your wedding website is now:
 - ✅ Deployed and accessible
 - ✅ Receiving RSVPs
 - ✅ Sending confirmation emails
@@ -597,11 +555,11 @@ Congratulations! Your wedding website is now:
 1. Share website with guests
 2. Monitor RSVP responses
 3. Approve guests and send confirmations
-4. Customize email templates
-5. Gather additional information if needed
+4. Customize email templates as needed
+5. Keep Netlify and dependencies updated
 
 ---
 
 *Made with ❤️ for J-D & A-N's Special Day*
 
-**Questions?** Check the docs folder or create an issue on GitHub.
+**Last Updated:** December 14, 2025
