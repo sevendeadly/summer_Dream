@@ -228,27 +228,9 @@ p {
     font-size: 1.2rem;
 }
 
-.admin-btn::before {
-    content: '👤';
-    font-size: 1.1rem;
-}
-
 /* ===========================
    HERO SECTION - Enhanced
    =========================== */
-
-/*.hero {
-    background: linear-gradient(135deg, var(--background) 100%, var(--secondary-color) 20%);
-    color: var(--text-light);
-    padding: var(--spacing-xl) var(--spacing-md);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    min-height: 85vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}*/
 
 .hero {
     background: linear-gradient(180deg, var(--secondary-color) 0%, var(--background) 50%);
@@ -263,17 +245,6 @@ p {
     justify-content: center;
 }
 
-/*.hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: drift 60s linear infinite;
-}*/
 .hero::before {
     content: '';
     position: absolute;
