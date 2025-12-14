@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions - Summer & Dream Wedding Website
+# GitHub Copilot Instructions - Audrey & Josue-Daniel 2026 Wedding Website
 
 ## 🎯 Project Overview
 

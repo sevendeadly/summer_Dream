@@ -2,7 +2,7 @@
 
 ## ✅ Restructuring Complete!
 
-The Summer & Dream wedding website has been successfully reorganized from a flat structure to a clean **Model-View-Controller (MVC)** architecture.
+The Audrey & Josue-Daniel 2026 wedding website has been successfully reorganized from a flat structure to a clean **Model-View-Controller (MVC)** architecture.
 
 ## 📊 Before vs After
 
@@ -242,7 +242,7 @@ This restructuring demonstrates:
 
 ## 🎉 Next Steps
 
-### For the Couple (Summer & Dream):
+### For the Couple (Audrey & Josue-Daniel 2026):
 
 1. **Customize Configuration** (`models/config.js`):
    - Wedding date and time
@@ -332,7 +332,7 @@ The new structure makes it:
 - **Easier to test** - Isolated components
 - **Easier to customize** - Centralized config
 
-**Perfect for Summer & Dream's special day! 🎊💍**
+**Perfect for Audrey & Josue-Daniel 2026's special day! 🎊💍**
 
 ---
 
