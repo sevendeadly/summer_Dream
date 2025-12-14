@@ -1,54 +1,80 @@
 // ==================================
-// NETLIFY FUNCTION: GET RSVPS FROM NOTION
-// File: netlify/functions/get-rsvps.js
+// NETLIFY FUNCTION: Get RSVPs from Storage
+// File: controllers/netlify-func/get-rsvps.js
+// Retrieves RSVPs from Netlify Blob Storage
 // ==================================
 
-const { Client } = require('@notionhq/client');
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
+  // Only allow GET requests
   if (event.httpMethod !== 'GET') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method Not Allowed' })
+    };
   }
-
-  const NOTION_API_KEY = process.env.NOTION_API_KEY;
-  const DATABASE_ID = process.env.NOTION_DATABASE_ID;
-  const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
   // Check authorization
+  const ADMIN_SECRET = process.env.ADMIN_SECRET;
   const secret = event.headers['x-admin-secret'];
+
   if (secret !== ADMIN_SECRET) {
-    return { statusCode: 401, body: 'Unauthorized' };
+    console.warn('⚠️ Unauthorized access attempt to get-rsvps');
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: 'Unauthorized - invalid admin secret' })
+    };
   }
 
-  const notion = new Client({ auth: NOTION_API_KEY });
-
   try {
-    const response = await notion.databases.query({
-      database_id: DATABASE_ID,
-      sorts: [{ property: 'Submitted At', direction: 'descending' }]
-    });
+    const store = getStore('rsvps');
+    
+    // Get all RSVP entries from blob storage
+    const { blobs } = await store.list();
+    
+    const rsvps = [];
+    let pending = 0;
+    let approved = 0;
+    let declined = 0;
 
-    const rsvps = response.results.map(page => ({
-      id: page.id,
-      name: page.properties.Name.title[0]?.text.content || '',
-      email: page.properties.Email.email || '',
-      phone: page.properties.Phone.phone_number || '',
-      attending: page.properties.Attending.select?.name || '',
-      guests: page.properties.Guests.number || 1,
-      dietary: page.properties.Dietary.rich_text[0]?.text.content || '',
-      message: page.properties.Message.rich_text[0]?.text.content || '',
-      status: page.properties.Status?.select?.name || 'pending',
-      submittedAt: page.properties['Submitted At'].date?.start || ''
-    }));
+    // Fetch each RSVP
+    for (const blob of blobs) {
+      const rsvpData = await store.get(blob.key);
+      if (rsvpData) {
+        const rsvp = JSON.parse(rsvpData);
+        rsvps.push(rsvp);
+
+        // Count by status
+        if (rsvp.status === 'pending') pending++;
+        else if (rsvp.status === 'approved') approved++;
+        else if (rsvp.status === 'declined') declined++;
+      }
+    }
+
+    // Sort by submission date (newest first)
+    rsvps.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+    console.log(`✅ Retrieved ${rsvps.length} RSVPs (${pending} pending, ${approved} approved, ${declined} declined)`);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ results: rsvps })
+      body: JSON.stringify({
+        results: rsvps,
+        total: rsvps.length,
+        pending: pending,
+        approved: approved,
+        declined: declined
+      })
     };
   } catch (error) {
+    console.error('❌ Error retrieving RSVPs:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({
+        error: 'Failed to retrieve RSVPs',
+        details: error.message
+      })
     };
   }
 };

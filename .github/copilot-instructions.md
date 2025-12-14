@@ -2,9 +2,9 @@
 
 ## 🎯 Project Overview
 
-A lightweight, production-ready wedding website (June 12, 2026) using **MVC architecture with Netlify serverless backend**. Current version is a multi-page vanilla JS app that integrates Notion database for RSVPs and serverless functions for email confirmations.
+A lightweight, production-ready wedding website (June 12, 2026) using **MVC architecture with Netlify serverless backend**. Current version is a multi-page vanilla JS app that uses Netlify Blob Storage for RSVPs and serverless functions for email confirmations via SendGrid.
 
-**Key business logic:** Guests fill RSVP → Netlify function saves to Notion → Admin reviews → Sends confirmation email.
+**Key business logic:** Guests fill RSVP → Netlify function stores in Blob Storage → Admin reviews → Sends confirmation email via SendGrid.
 
 ---
 
@@ -25,13 +25,16 @@ Every feature follows strict MVC structure:
 ### Serverless Backend Flow
 ```
 Client Form Submit → Netlify Function (controllers/netlify-func/submit-rsvp.js)
-                   → Notion Database (stores RSVP)
-                   → Trigger email function
-                   → SendGrid/Gmail SMTP sends confirmation
-Admin Dashboard → get-rsvps.js (auth via X-Admin-Secret header) → Displays RSVPs
+                   → Netlify Blob Storage (stores RSVP)
+                   
+Admin reviews RSVP → Approve button → Netlify Function (send-confirmation.js)
+                   → SendGrid API sends email confirmation
+                   → Updates RSVP status to "approved" or "declined"
+
+Admin Dashboard ← Get RSVPs: get-rsvps.js (auth via X-Admin-Secret header)
 ```
 
-**Critical:** API keys NEVER in client code. Functions use environment variables. See `docs/COMPLETE_SETUP.md` for Netlify env setup.
+**Critical:** API keys NEVER in client code. Functions use environment variables. See `docs/COMPLETE_SETUP.md` and `docs/RSVP_SYSTEM.md` for setup.
 
 ---
 
@@ -145,7 +148,7 @@ export class FeatureController {
 ### Debugging
 - Client: Browser DevTools (F12) → Console for errors, Network for API calls
 - Functions: `netlify dev` shows function logs; use `console.log()` for debugging
-- Notion issues: Check database ID, API key, and page schema match
+- RSVP issues: Check admin secret, Netlify Blob Storage access
 
 ---
 
@@ -156,16 +159,16 @@ export class FeatureController {
 3. **Never embed script logic in HTML** - Use controller classes
 4. **Never modify styles.css without CSS variables** - Breaks theme switching
 5. **Never skip form validation** - Always use `RSVPData.validate()` before submit
-6. **Never call Notion API directly from client** - Always use Netlify function
+6. **Never call external APIs directly from client** - Always use Netlify function
 7. **Never commit `.env` file** - Add to `.gitignore`, use `.env.example`
 
 ---
 
 ## 📚 Essential Documentation Links
 
-- **Setup & Deployment:** `docs/COMPLETE_SETUP.md` (all env vars, functions, Notion setup)
-- **Email System:** `docs/EMAIL_SYSTEM.md` (10-step email configuration)
-- **Notion Integration:** `docs/NOTION_INTEGRATION.md` (database schema, API setup)
+- **Setup & Deployment:** `docs/COMPLETE_SETUP.md` (all env vars, functions, deployment)
+- **RSVP System:** `docs/RSVP_SYSTEM.md` (Netlify Blob Storage, admin dashboard)
+- **Email System:** `docs/EMAIL_SYSTEM.md` (SendGrid email configuration)
 - **Security:** `docs/SECURITY.md` (API key protection, HTTPS, validation)
 - **Deployment:** `docs/DEPLOYMENT.md` (GitHub → Netlify process)
 - **Version History:** `CHANGELOG.md` (features per version)
@@ -178,10 +181,10 @@ export class FeatureController {
 - [ ] **Change color theme?** → Add to `THEME_PALETTES` in `models/config.js`, update `ThemeController`
 - [ ] **Add payment option?** → `PAYMENT_LINKS` in `models/config.js`
 - [ ] **Update album links?** → `ALBUM_LINKS` in `models/config.js`
-- [ ] **Add RSVP field?** → Update `RSVPData` model validation, form HTML, admin table columns
-- [ ] **Customize email template?** → `controllers/netlify-func/send-confirmation.js` `emailHTML` variable
-- [ ] **Add new page?** → Create `.html` in `views/`, create controller, add route if needed
-- [ ] **Fix admin authentication?** → Check `netlify.toml` env var `ADMIN_SECRET`, localStorage key in `AdminController`
+- [ ] **Add RSVP field?** → Update `RSVPData` model validation, form HTML, Netlify functions, admin table
+- [ ] **Customize email template?** → `controllers/netlify-func/send-confirmation.js` `getAcceptedTemplate()` & `getDeclinedTemplate()`
+- [ ] **Add new page?** → Create `.html` in `views/`, create controller, import in `app.js`
+- [ ] **Fix admin authentication?** → Check `ADMIN_SECRET` env var in Netlify, localStorage in `AdminController`
 
 ---
 
@@ -191,19 +194,16 @@ export class FeatureController {
 
 ### Environment Variables Structure
 ```bash
-SENDGRID_API_KEY=SG.xxxxx...              # API key only (no EMAIL_USER needed!)
-SENDGRID_FROM_EMAIL=noreply@yourwedding.com  # Verified sender in SendGrid
+SENDGRID_API_KEY=SG.xxxxx...              # API key only
+SENDGRID_FROM_EMAIL=noreply@yourwedding.com  # Verified sender
 ADMIN_EMAIL=your-email@example.com        # Where admin notifications go
-NOTION_API_KEY=secret_xxxxx
-NOTION_DATABASE_ID=xxxxx
-ADMIN_SECRET=strong-password
+ADMIN_SECRET=strong-password              # Admin dashboard auth
 ```
 
 ### Key Difference from Traditional SMTP
 - ❌ NO `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`
-- ✅ YES `SENDGRID_API_KEY` (API token instead of credentials)
-- ✅ YES `SENDGRID_FROM_EMAIL` (configured in SendGrid dashboard)
-- **Email_User with SendGrid:** Not applicable. Use `SENDGRID_API_KEY` for authentication instead.
+- ✅ YES `SENDGRID_API_KEY` (API token for authentication)
+- ✅ YES `SENDGRID_FROM_EMAIL` (verified in SendGrid dashboard)
 
 ### Functions Using SendGrid
 - `controllers/netlify-func/send-confirmation.js` - Uses `@sendgrid/mail` package
@@ -211,13 +211,11 @@ ADMIN_SECRET=strong-password
 - Send method: `await sgMail.send({to, from, subject, html})`
 
 ### Netlify Deployment
-Set these environment variables in Netlify Dashboard → Site Settings → Environment Variables:
+Set these environment variables in Netlify Dashboard → Site Settings → Build & Deploy → Environment:
 ```
-SENDGRID_API_KEY: (get from SendGrid API Keys page - starts with SG.)
-SENDGRID_FROM_EMAIL: noreply@yourwedding.com (verified in SendGrid dashboard)
+SENDGRID_API_KEY: SG.xxxxx... (from SendGrid API Keys)
+SENDGRID_FROM_EMAIL: noreply@yourwedding.com (verified)
 ADMIN_EMAIL: your-email@example.com
-NOTION_API_KEY: secret_xxxxx
-NOTION_DATABASE_ID: xxxxx
 ADMIN_SECRET: strong-password-here
 ```
 
@@ -228,7 +226,7 @@ ADMIN_SECRET: strong-password-here
 4. Paste API key into Netlify environment variables above
 5. Deploy to Netlify and test
 
-**Reference:** See `docs/EMAIL_SYSTEM.md` for complete setup instructions
+**Reference:** See `docs/RSVP_SYSTEM.md` and `docs/EMAIL_SYSTEM.md` for complete setup
 
 ---
 
@@ -239,9 +237,9 @@ ADMIN_SECRET: strong-password-here
 - **"How do serverless functions work?"** → `controllers/netlify-func/submit-rsvp.js`
 - **"How do I access config values?"** → `models/config.js` (all exports at top)
 - **"How does theme switching work?"** → `controllers/theme.js` applies CSS variable values
-- **"How do I query Notion?"** → `controllers/netlify-func/submit-rsvp.js` or `get-rsvps.js`
+- **"How do I store/retrieve RSVPs?"** → `controllers/netlify-func/submit-rsvp.js`, `get-rsvps.js`, `admin.js`
 
 ---
 
-**Last Updated:** December 11, 2025  
-**Project Version:** 2.1.0 (Email System + Admin Dashboard)
+**Last Updated:** December 14, 2025  
+**Project Version:** 2.1.0 (Netlify Blob Storage + SendGrid Email)
