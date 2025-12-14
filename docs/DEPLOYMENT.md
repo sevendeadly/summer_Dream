@@ -278,4 +278,4 @@ Your wedding website is now live and ready to share with your guests!
 
 ---
 
-*Made with ❤️ for Summer & Dream's Wedding - June 12, 2026*
+*Made with ❤️ for Audrey & Josue-Daniel 2026's Wedding - June 12, 2026*

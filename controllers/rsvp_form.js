@@ -128,13 +128,23 @@ export class RSVPController {
         
         return await response.json();
         */
+       const response = await fetch('/.netlify/functions/submit-rsvp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+        
+        return await response.json();
 
-        // For now, return a mock response
+        /**
+         * // For now, return a mock response
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve({ success: true });
             }, 1000);
-        });
+        });*/
     }
 
     // Show success message

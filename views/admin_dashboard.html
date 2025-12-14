@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <title>RSVP Admin Dashboard</title>
+</head>
+<body class="admin-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <ul class="nav-menu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="info.html">Wedding Info</a></li>
+                <li><a href="gift.html">Gift Pot</a></li>
+                <li><a href="rsvp.html">RSVP</a></li>
+                <li><a href="albums.html">Albums</a></li>
+            </ul>
+            <a href="admin_dashboard.html" class="admin-btn active" aria-label="Admin Dashboard" title="Admin Dashboard"><span>👤</span></a>
+        </div>
+    </nav>
+
+    <!-- Login section (shown when not authenticated) -->
+    <section id="login-section" class="admin-auth">
+        <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">Admin Login</h2>
+        <input type="password" id="admin-secret" placeholder="Enter admin secret">
+        <button id="login-btn">Login</button>
+        <p style="color: #dc3545; margin-top: 15px; display: none;" id="auth-error">Invalid secret</p>
+    </section>
+
+    <!-- Dashboard section (hidden until authenticated) -->
+    <section id="dashboard-section" style="display:none;">
+        <div class="container">
+            <div class="header">
+                <h1>RSVP Admin Dashboard</h1>
+                <p>Manage wedding RSVPs and send confirmations</p>
+                <div class="btn-delete" style="text-align: right; margin-top: 8px;">
+                    <button id="logout-btn" >Logout</button>
+                </div>
+            </div>
+
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <h3>Total RSVPs</h3>
+                    <div class="number" id="stats-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Attending</h3>
+                    <div class="number" id="stats-attending">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Review</h3>
+                    <div class="number" id="stats-pending">0</div>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <select id="filter-status">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                </select>
+                <select id="filter-attending">
+                    <option value="">All Responses</option>
+                    <option value="yes">Attending</option>
+                    <option value="no">Not Attending</option>
+                </select>
+                <input type="text" id="search-input" placeholder="Search by name or email">
+            </div>
+
+            <div id="rsvp-table" class="rsvp-list">
+                <!-- Table injected by controllers/admin.js -->
+                <div style="padding: 40px; text-align: center; color: #999;">Loading RSVPs...</div>
+            </div>
+
+            <div id="pagination-controls" class="pagination-controls"></div>
+        </div>
+    </section>
+
+    <!-- Modal for viewing details -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('modal').style.display='none'">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Import Admin Controller -->
+    <script type="module">
+        import { AdminController } from '../controllers/admin.js';
+        window.adminController = new AdminController();
+        window.adminController.init();
+    </script>
+</body>
+</html>
+

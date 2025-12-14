@@ -149,7 +149,7 @@ exports.handler = async (event, context) => {
 {
   "name": "wedding-website",
   "version": "1.0.0",
-  "description": "Summer & Dream Wedding Website",
+  "description": "Audrey & Josue-Daniel 2026 Wedding Website",
   "dependencies": {
     "@notionhq/client": "^2.2.3"
   }

@@ -32,7 +32,7 @@ export class InfoController {
         
         // Try to get user's location
         if ('geolocation' in navigator) {
-            const geoOptions = { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 };
+            const geoOptions = { enableHighAccuracy: false, timeout: 1000, maximumAge: 0 };
             
             navigator.geolocation.getCurrentPosition(
                 (pos) => {

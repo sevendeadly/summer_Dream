@@ -35,6 +35,7 @@ temp/
 
 # Testing
 coverage/
+.env
 
 # Netlify
 .netlify/

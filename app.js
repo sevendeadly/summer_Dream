@@ -4,11 +4,12 @@
 
 import { CountdownController } from './controllers/countdown.js';
 import { PaymentController } from './controllers/payment.js';
-import { RSVPController } from './controllers/rsvp.js';
+import { RSVPController } from './controllers/rsvp_form.js';
 import { AlbumsController } from './controllers/albums.js';
 import { UtilityController } from './controllers/utility.js';
 import { ThemeController } from './controllers/theme.js';
 import { InfoController } from './controllers/info.js';
+import { AdminController } from './controllers/admin.js';
 
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +32,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize info page
     const infoController = new InfoController();
     infoController.init();
+
+    // Initialize admin dashboard (only on admin pages)
+    const adminController = new AdminController();
+    adminController.init();
 
     // Initialize albums page
     const albumsController = new AlbumsController();
