@@ -285,4 +285,4 @@ Anything in HTML, CSS, or JavaScript files can be viewed by anyone. Treat it as 
 
 **Stay secure! 🔐**
 
-*This guide is part of the Summer & Dream wedding website project*
+*This guide is part of the Audrey & Josue-Daniel 2026 wedding website project*

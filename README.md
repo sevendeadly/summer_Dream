@@ -1,4 +1,4 @@
-# Summer & Dream Wedding Website
+# Audrey & Josue-Daniel 2026 Wedding Website
 
 A lightweight, simple, and beautiful wedding website with countdown timer, RSVP form, gift pot, and photo albums. Now with a clean MVC (Model-View-Controller) architecture for better organization and maintainability.
 
@@ -300,7 +300,7 @@ This is your personal wedding website. Feel free to modify and use as you wish!
 
 ## 🙏 Credits
 
-Made with ❤️ for Summer & Dream  
+Made with ❤️ for Audrey & Josue-Daniel 2026  
 Restructured with MVC pattern for better maintainability
 
 ---

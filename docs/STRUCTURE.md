@@ -1,6 +1,6 @@
 # MVC Architecture Documentation
 
-This document explains the Model-View-Controller (MVC) architecture used in the Summer & Dream wedding website.
+This document explains the Model-View-Controller (MVC) architecture used in the Audrey & Josue-Daniel 2026 wedding website.
 
 ## 📚 What is MVC?
 
@@ -415,5 +415,5 @@ For questions about the architecture:
 
 ---
 
-**Made with ❤️ for Summer & Dream**  
+**Made with ❤️ for Audrey & Josue-Daniel 2026**  
 *Clean architecture for a beautiful celebration*

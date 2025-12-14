@@ -1,6 +1,6 @@
 # Version Comparison Guide
 
-This document compares the two versions of the Summer & Dream wedding website and helps you choose which one to use.
+This document compares the two versions of the Audrey & Josue-Daniel 2026 wedding website and helps you choose which one to use.
 
 ## 📊 Version Overview
 
@@ -231,4 +231,4 @@ Do you know React?
 └─ No → Use Multi-Page MVC Version (Recommended)
 ```
 
-**Made with ❤️ for Summer & Dream**
+**Made with ❤️ for Audrey & Josue-Daniel 2026**

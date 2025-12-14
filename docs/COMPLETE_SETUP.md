@@ -1,6 +1,6 @@
 # Complete Setup & Deployment Guide
 
-**Master guide for setting up and deploying the Summer & Dream wedding website.**
+**Master guide for setting up and deploying the Audrey & Josue-Daniel 2026 wedding website.**
 
 ---
 

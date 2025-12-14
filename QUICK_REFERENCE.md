@@ -262,4 +262,4 @@ This quick reference covers the essentials. For detailed information, see the fu
 
 ---
 
-**Made with ❤️ for Summer & Dream**
+**Made with ❤️ for Audrey & Josue-Daniel 2026**

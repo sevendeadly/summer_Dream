@@ -193,7 +193,7 @@ p {
     color: var(--accent-color);
 }
 
-/* Admin Button Styles */
+/* Admin Button Styles - Icon Only */
 .admin-btn {
     position: absolute;
     right: var(--spacing-md);
@@ -201,14 +201,16 @@ p {
     transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
     background: linear-gradient(135deg, var(--primary-color), #c9a86a);
     color: white;
     text-decoration: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.95rem;
+    border-radius: 50%;
+    line-height: 1;
+    font-size: 1.2rem;
     transition: all var(--transition-base);
     box-shadow: var(--shadow-sm);
     border: none;
@@ -219,30 +221,16 @@ p {
 .admin-btn.active {
     background: linear-gradient(135deg, #c9a86a, var(--primary-color));
     box-shadow: var(--shadow-md);
-    transform: translateY(-50%) scale(1.05);
+    transform: translateY(-50%) scale(1.1);
 }
-
-.admin-btn::before {
-    content: '👤';
-    font-size: 1.1rem;
+.admin-btn span {
+    display: inline-block;
+    font-size: 1.2rem;
 }
 
 /* ===========================
    HERO SECTION - Enhanced
    =========================== */
-
-/*.hero {
-    background: linear-gradient(135deg, var(--background) 100%, var(--secondary-color) 20%);
-    color: var(--text-light);
-    padding: var(--spacing-xl) var(--spacing-md);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    min-height: 85vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}*/
 
 .hero {
     background: linear-gradient(180deg, var(--secondary-color) 0%, var(--background) 50%);
@@ -257,17 +245,6 @@ p {
     justify-content: center;
 }
 
-/*.hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: drift 60s linear infinite;
-}*/
 .hero::before {
     content: '';
     position: absolute;
@@ -459,8 +436,8 @@ p {
    =========================== */
 
 .page-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: var(--accent-color);
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--background) 100%);
+    color: var(--text-dark);
     padding: 60px 20px;
     text-align: center;
 }
@@ -813,8 +790,8 @@ p {
 
 .rsvp-deadline {
     font-size: 1.1em;
-    color: var(--secondary-color);
-    font-weight: 500;
+    color: var(--text-dark);
+    font-weight: 600;
     text-align: center;
 }
 
@@ -1104,6 +1081,7 @@ footer {
         right: var(--spacing-sm);
         padding: 0.65rem 1rem;
         font-size: 0.85rem;
+        display: none;
     }
 
     .admin-btn::before {
