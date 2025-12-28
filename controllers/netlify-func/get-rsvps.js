@@ -28,7 +28,13 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const store = getStore('rsvps');
+    // Support local development by passing context when available
+    const storeOptions = { name: 'rsvps' };
+    if (context?.site?.id && context?.site?.apiToken) {
+      storeOptions.siteID = context.site.id;
+      storeOptions.token = context.site.apiToken;
+    }
+    const store = getStore(storeOptions);
     
     // Get all RSVP entries from blob storage
     const { blobs } = await store.list();

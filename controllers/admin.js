@@ -202,15 +202,16 @@ export class AdminController {
 
         pageRSVPs.forEach(rsvp => {
             const statusClass = `status-${rsvp.status.toLowerCase()}`;
+            const statusDisplay = rsvp.status.charAt(0).toUpperCase() + rsvp.status.slice(1);
             html += `<tr>
                 <td>${this.escapeHtml(rsvp.name)}</td>
                 <td>${this.escapeHtml(rsvp.email)}</td>
                 <td>${rsvp.attending}</td>
                 <td>${rsvp.guests}</td>
-                <td><span class="status-badge ${statusClass}">${rsvp.status}</span></td>
+                <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
                 <td class="actions">
-                    ${rsvp.status !== 'Approved' ? `<button onclick="adminController.approveRSVP('${rsvp.id}')">Approve</button>` : ''}
-                    ${rsvp.status !== 'Declined' ? `<button onclick="adminController.declineRSVP('${rsvp.id}')">Decline</button>` : ''}
+                    ${rsvp.status !== 'approved' ? `<button onclick="adminController.approveRSVP('${rsvp.id}')">Approve</button>` : ''}
+                    ${rsvp.status !== 'declined' ? `<button onclick="adminController.declineRSVP('${rsvp.id}')">Decline</button>` : ''}
                     <button onclick="adminController.viewDetails('${rsvp.id}')">Details</button>
                 </td>
             </tr>`;
@@ -295,7 +296,7 @@ export class AdminController {
     updateStats() {
         const total = this.filteredRSVPs.length;
         const attending = this.filteredRSVPs.filter(r => r.attending === 'yes').length;
-        const pending = this.filteredRSVPs.filter(r => r.status === 'Pending Review').length;
+        const pending = this.filteredRSVPs.filter(r => r.status === 'pending').length;
 
         if (this.statsTotal) this.statsTotal.textContent = total;
         if (this.statsAttending) this.statsAttending.textContent = attending;

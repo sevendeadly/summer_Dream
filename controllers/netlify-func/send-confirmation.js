@@ -31,8 +31,9 @@ exports.handler = async (event, context) => {
   try {
     const data = JSON.parse(event.body);
 
-    // Verify admin secret
-    if (data.adminSecret !== ADMIN_SECRET) {
+    // Verify admin secret from header
+    const secret = event.headers['x-admin-secret'];
+    if (secret !== ADMIN_SECRET) {
       console.warn('⚠️ Unauthorized confirmation attempt');
       return {
         statusCode: 401,
@@ -40,38 +41,60 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Validate rsvpId
+    if (!data.rsvpId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'rsvpId is required' }),
+      };
+    }
+
+    // Get RSVP data from storage
+    // Support local development by passing context when available
+    const storeOptions = { name: 'rsvps' };
+    if (context?.site?.id && context?.site?.apiToken) {
+      storeOptions.siteID = context.site.id;
+      storeOptions.token = context.site.apiToken;
+    }
+    const store = getStore(storeOptions);
+    const rsvpData = await store.get(data.rsvpId);
+    
+    if (!rsvpData) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'RSVP not found' }),
+      };
+    }
+
+    const rsvp = JSON.parse(rsvpData);
+
+    // Determine new status based on action (approve or decline)
+    // If status is 'Approved' in request, set to approved, else declined
+    const newStatus = data.status === 'Approved' ? 'approved' : 'declined';
+    rsvp.status = newStatus;
+    rsvp.approvedAt = new Date().toISOString();
+
     // Initialize SendGrid
     sgMail.setApiKey(SENDGRID_API_KEY);
 
-    // Email template based on attendance
-    const emailTemplate = data.attending === 'yes' 
-      ? getAcceptedTemplate(data)
-      : getDeclinedTemplate(data);
+    // Email template based on attendance (yes = accepted, no = declined)
+    const emailTemplate = rsvp.attending === 'yes' 
+      ? getAcceptedTemplate(rsvp)
+      : getDeclinedTemplate(rsvp);
 
     // Send email via SendGrid
     await sgMail.send({
-      to: data.email,
+      to: rsvp.email,
       from: SENDGRID_FROM_EMAIL,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
     });
 
     // Update RSVP status in storage
-    if (data.rsvpId) {
-      const store = getStore('rsvps');
-      const rsvpData = await store.get(data.rsvpId);
-      
-      if (rsvpData) {
-        const rsvp = JSON.parse(rsvpData);
-        rsvp.status = data.attending === 'yes' ? 'approved' : 'declined';
-        rsvp.approvedAt = new Date().toISOString();
-        
-        await store.set(data.rsvpId, JSON.stringify(rsvp));
-        console.log(`✅ RSVP ${data.rsvpId} updated to ${rsvp.status}`);
-      }
-    }
+    await store.set(data.rsvpId, JSON.stringify(rsvp));
+    console.log(`✅ RSVP ${data.rsvpId} updated to ${rsvp.status}`);
 
-    console.log(`📧 Confirmation email sent to ${data.email}`);
+    console.log(`📧 Confirmation email sent to ${rsvp.email}`);
 
     return {
       statusCode: 200,
@@ -145,10 +168,11 @@ function getAcceptedTemplate(data) {
             
             <h3 style="color: #d4a5a5;">What to Expect</h3>
             <ul>
-              <li>3:00 PM - Guest Arrival</li>
-              <li>3:30 PM - Ceremony</li>
+              <li>2:00 PM - Guest Arrival</li>
+              <li>2:30 PM - Welcome Drinks</li>
+              <li>3:30 PM - Religious Ceremony Begins</li>
               <li>4:30 PM - Cocktail Hour</li>
-              <li>5:30 PM - Reception & Dinner</li>
+              <li>7:30 PM - Reception & Dinner</li>
               <li>10:00 PM - Last Dance</li>
             </ul>
             
