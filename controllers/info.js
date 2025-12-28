@@ -8,6 +8,8 @@ export class InfoController {
         this.colorSpheres = document.querySelectorAll('.color-sphere');
         this.selectedColorsList = document.getElementById('selected-colors-list');
         this.selectedColors = [];
+        // Make instance globally accessible for language controller
+        window.infoController = this;
     }
 
     // Initialize info page
@@ -101,9 +103,21 @@ export class InfoController {
         if (!this.selectedColorsList) return;
 
         if (this.selectedColors.length === 0) {
-            this.selectedColorsList.textContent = 'None yet';
+            // Restore data-i18n attribute so it can be translated
+            this.selectedColorsList.setAttribute('data-i18n', 'info.noneYet');
+            
+            // Get translation from language controller if available
+            const langController = window.languageController;
+            if (langController) {
+                this.selectedColorsList.textContent = langController.getTranslation('info.noneYet');
+            } else {
+                this.selectedColorsList.textContent = 'None yet';
+            }
             this.selectedColorsList.style.color = '#666';
         } else {
+            // Remove data-i18n attribute to prevent language controller from overwriting color names
+            this.selectedColorsList.removeAttribute('data-i18n');
+            
             const colorNames = this.selectedColors.map(c => c.name).join(', ');
             this.selectedColorsList.textContent = colorNames;
             this.selectedColorsList.style.color = 'var(--secondary-color)';
