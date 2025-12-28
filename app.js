@@ -10,10 +10,15 @@ import { UtilityController } from './controllers/utility.js';
 import { ThemeController } from './controllers/theme.js';
 import { InfoController } from './controllers/info.js';
 import { AdminController } from './controllers/admin.js';
+import { LanguageController } from './controllers/language.js';
 
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize theme controller first
+    // Initialize language controller first (before other controllers)
+    const languageController = new LanguageController();
+    languageController.init();
+
+    // Initialize theme controller
     const themeController = new ThemeController();
     themeController.init();
 

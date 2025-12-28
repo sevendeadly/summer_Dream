@@ -10,11 +10,11 @@
     <nav class="navbar">
         <div class="nav-container">
             <ul class="nav-menu">
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="info.html">Wedding Info</a></li>
-                <li><a href="gift.html" class="active">Gift Pot</a></li>
-                <li><a href="rsvp.html">RSVP</a></li>
-                <li><a href="albums.html">Albums</a></li>
+                <li><a href="../index.html" data-i18n="nav.home">Home</a></li>
+                <li><a href="info.html" data-i18n="nav.info">Wedding Info</a></li>
+                <li><a href="gift.html" class="active" data-i18n="nav.gift">Gift Pot</a></li>
+                <li><a href="rsvp.html" data-i18n="nav.rsvp">RSVP</a></li>
+                <li><a href="albums.html" data-i18n="nav.albums">Albums</a></li>
             </ul>
             <a href="admin_dashboard.html" class="admin-btn" aria-label="Admin Dashboard"><span>👤</span></a>
         </div>
@@ -23,31 +23,31 @@
     <main>
         <section class="page-header">
             <div class="container">
-                <h1>Gift Pot</h1>
-                <p>Your presence is the greatest gift, but if you'd like to contribute to our future together, we'd be grateful.</p>
+                <h1 data-i18n="gift.title">Gift Pot</h1>
+                <p data-i18n="gift.subtitle">Your presence is the greatest gift, but if you'd like to contribute to our future together, we'd be grateful.</p>
             </div>
         </section>
 
         <section class="gift-section">
             <div class="container">
                 <div class="gift-options">
-                    <h2>💝 Online Payment Options</h2>
+                    <h2 data-i18n="gift.onlinePayment">💝 Online Payment Options</h2>
                     
                     <div class="payment-buttons">
                         <a href="https://www.paypal.com/paypalme/danielkoanga" class="payment-btn paypal-btn" id="paypal-btn">
                             <span class="payment-icon">💳</span>
-                            <span>Give via PayPal</span>
+                            <span data-i18n="gift.givePayPal">Give via PayPal</span>
                         </a>
                         
                         <a href="https://wise.com/pay/me/josuedanielk" class="payment-btn wise-btn" id="wise-btn">
                             <span class="payment-icon">🌍</span>
-                            <span>Give via Wise</span>
+                            <span data-i18n="gift.giveWise">Give via Wise</span>
                         </a>
                     </div>
                     
                     <div class="info-card">
-                        <h2>💶 Wero Payment</h2>
-                        <p>You can also send a gift via Wero:</p>
+                        <h2 data-i18n="gift.weroPayment">💶 Wero Payment</h2>
+                        <p data-i18n="gift.weroDescription">You can also send a gift via Wero:</p>
                         <div class="bank-details">
                             <div class="detail-item">
                                 <strong>Wero ID:</strong>
@@ -57,11 +57,11 @@
                     </div>
 
                     <div class="info-card">
-                        <h2>🏦 Bank Transfer Details</h2>
-                        <p>If you prefer to send a direct bank transfer:</p>
+                        <h2 data-i18n="gift.bankTransfer">🏦 Bank Transfer Details</h2>
+                        <p data-i18n="gift.bankDescription">If you prefer to send a direct bank transfer:</p>
                         <div class="bank-details">
                             <div class="detail-item">
-                                <strong>Account Name:</strong>
+                                <strong data-i18n="gift.accountName">Account Name:</strong>
                                 <span>Josue-Daniel KOANGA</span>
                             </div>
                             <div class="detail-item">
@@ -73,8 +73,8 @@
                                 <span>SOGEFRPP</span>
                             </div>
                             <div class="detail-item">
-                                <strong>Reference:</strong>
-                                <span>Wedding Gift - [Your Name]</span>
+                                <strong data-i18n="gift.reference">Reference:</strong>
+                                <span data-i18n="gift.referencePlaceholder">Wedding Gift - [Your Name]</span>
                             </div>
                         </div>
                     </div>
@@ -82,15 +82,15 @@
                 </div>
 
                 <div class="thank-you-message">
-                    <p><em>Thank you so much for your generosity. </em></p>
-                    <p><em>Your love and support mean the world to us!</em></p>
+                    <p><em data-i18n="gift.thankYou">Thank you so much for your generosity. </em></p>
+                    <p><em data-i18n="gift.support">Your love and support mean the world to us!</em></p>
                 </div>
             </div>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2026 Audrey & Josue-Daniel | Made with ❤️</p>
+        <p>&copy; 2026 Audrey & Josue-Daniel | <span data-i18n="common.madeWith">Made with ❤️</span></p>
     </footer>
 
     <script type="module" src="../app.js"></script>

@@ -10,11 +10,11 @@
     <nav class="navbar">
         <div class="nav-container">
             <ul class="nav-menu">
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="info.html" class="active">Wedding Info</a></li>
-                <li><a href="gift.html">Gift Pot</a></li>
-                <li><a href="rsvp.html">RSVP</a></li>
-                <li><a href="albums.html">Albums</a></li>
+                <li><a href="../index.html" data-i18n="nav.home">Home</a></li>
+                <li><a href="info.html" class="active" data-i18n="nav.info">Wedding Info</a></li>
+                <li><a href="gift.html" data-i18n="nav.gift">Gift Pot</a></li>
+                <li><a href="rsvp.html" data-i18n="nav.rsvp">RSVP</a></li>
+                <li><a href="albums.html" data-i18n="nav.albums">Albums</a></li>
             </ul>
             <a href="admin_dashboard.html" class="admin-btn" aria-label="Admin Dashboard"><span>👤</span></a>
         </div>
@@ -23,51 +23,54 @@
     <main>
         <section class="page-header">
             <div class="container">
-                <h1>Wedding Information</h1>
-                <p>Everything you need to know about our special day</p>
+                <h1 data-i18n="info.title">Wedding Information</h1>
+                <p data-i18n="info.subtitle">Everything you need to know about our special day</p>
             </div>
         </section>
 
         <section class="info-section">
             <div class="container">
                 <div class="info-card">
-                    <h2>📍 Venue</h2>
-                    <h3>Ceremony & Reception</h3>
+                    <h2>📍 <span data-i18n="info.venue">Venue</span></h2>
+                    <h3 data-i18n="info.ceremonyReception">Ceremony & Reception</h3>
                     <p><strong>Gardenia Receptions</strong></p>
                     <p>74 Rue de Dampont</p>
                     <p>Us, Ile-de-France</p>
                     <div class="venue-buttons">
-                        <button id="btn-itinerary" class="btn" style="cursor: pointer;">Get Itinerary</button>
+                        <button id="btn-itinerary" class="btn" style="cursor: pointer;" data-i18n="info.getItinerary">Get Itinerary</button>
                     </div>
                 </div>
 
                 <div class="info-card">
-                    <h2>🕒 Schedule</h2>
+                    <h2>🕒 <span data-i18n="info.schedule">Schedule</span></h2>
                     <div class="schedule">
                         <div class="schedule-item">
-                            <strong>3:00 PM</strong> - Guest Arrival
+                            <strong>2:00 PM</strong> - <span data-i18n="info.guestArrival">Guest Arrival</span>
                         </div>
                         <div class="schedule-item">
-                            <strong>3:30 PM</strong> - Ceremony Begins
+                            <strong>2:30 PM</strong> - <span data-i18n="info.welcomeDrinks">Welcome Drinks</span>
                         </div>
                         <div class="schedule-item">
-                            <strong>4:30 PM</strong> - Cocktail Hour
+                            <strong>3:00 PM</strong> - <span data-i18n="info.ceremonyBegins">Religious Ceremony Begins</span>
                         </div>
                         <div class="schedule-item">
-                            <strong>5:30 PM</strong> - Reception & Dinner
+                            <strong>4:30 PM</strong> - <span data-i18n="info.cocktailHour">Cocktail Hour</span>
                         </div>
                         <div class="schedule-item">
-                            <strong>10:00 PM</strong> - Last Dance
+                            <strong>7:30 PM</strong> - <span data-i18n="info.receptionDinner">Reception & Dinner</span>
+                        </div>
+                        <div class="schedule-item">
+                            <strong>10:00 PM</strong> - <span data-i18n="info.lastDance">Last Dance</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="info-card">
-                    <h2>👔 Dress Code</h2>
-                    <p><strong>Formal / Cocktail Attire</strong></p>
-                    <p>Please wear what makes you feel comfortable and celebratory!</p>
+                    <h2>👔 <span data-i18n="info.dressCode">Dress Code</span></h2>
+                    <p><strong data-i18n="info.formalAttire">Formal / Cocktail Attire</strong></p>
+                    <p data-i18n="info.dressCodeNote">Please wear what makes you feel comfortable and celebratory!</p>
 
-                    <p>Note : Only the Color code is compulsory, and the following are just suggestions for inspiration purpose.</p>
+                    <p data-i18n="info.colorCodeNote">Note : Only the Color code is compulsory, and the following are just suggestions for inspiration purpose.</p>
                     
                     <div class="dresscode-images-container">
                         <div class="dresscode-images">
@@ -77,8 +80,8 @@
                         
                     </div>
                     <div class="attire-colors-section">
-                        <p style="margin-top: 20px; margin-bottom: 10px;"><strong>Choose your attire colors:</strong></p>
-                        <p>(You can select multiple colors) The color name is displayed below</p>
+                        <p style="margin-top: 20px; margin-bottom: 10px;"><strong data-i18n="info.chooseColors">Choose your attire colors:</strong></p>
+                        <p data-i18n="info.selectMultiple">(You can select multiple colors) The color name is displayed below</p>
 
                         <div class="color-palette-container">                            
                             <div class="color-sphere" data-color="#d7b8d3" data-name="Mauve" title="Mauve"></div>
@@ -99,7 +102,7 @@
 
 
                     <div class="attire-colors-section">
-                        <p style="margin-top: 20px; margin-bottom: 10px;"><strong>Choose your attire colors:</strong></p>
+                        <p style="margin-top: 20px; margin-bottom: 10px;"><strong data-i18n="info.chooseColors">Choose your attire colors:</strong></p>
                         <div class="color-palette-container">                            
                             <div class="color-sphere" data-color="#dfd3c7" data-name="Beige" title="Beige"></div>
                             <div class="color-sphere" data-color="#23283a" data-name="Charcoal" title="Charcoal"></div>
@@ -110,39 +113,45 @@
                             <div class="color-sphere" data-color="#b6c3d5" data-name="Steel Blue" title="Steel Blue"></div>
                         </div>
                         <div class="selected-colors-display">
-                            <p><strong>Selected colors:</strong> <span id="selected-colors-list">None yet</span></p>
+                            <p><strong data-i18n="info.selectedColors">Selected colors:</strong> <span id="selected-colors-list" data-i18n="info.noneYet">None yet</span></p>
                         </div>
                     </div>
                 </div>
 
                 <div class="info-card">
-                    <h2>🏨 Accommodations</h2>
-                    <p>You have room options at the following hotels and villas:</p>
+                    <h2>🏨 <span data-i18n="info.accommodations">Accommodations</span></h2>
+                    <p data-i18n="info.roomOptions">You have room options at the following hotels and villas:</p>
                     <div class="hotel">
                         <h3>COWOOL Cergy</h3>
                         <p>34 Boulevard du port, 95000 Cergy</p>
                         <p>Phone: +33 (0) 01.72.35.05.44</p>
-                        <a href="https://www.cowool.co/reservation-coliving-2/" class="btn-small">Book Now</a>
+                        <a href="https://www.cowool.co/reservation-coliving-2/" class="btn-small" data-i18n="info.bookNow">Book Now</a>
+                    </div>
+                    <div class="hotel">
+                        <h3>Hôtel Mercure Cergy-Pontoise Centre</h3>
+                        <p>3 Rue des Chênes Émeraude, 95000 Cergy</p>
+                        <p>Phone: +33 (0)1.34.24.94.94</p>
+                        <a href="https://all.accor.com/hotel/3452/index.fr.shtml?utm_campaign=seo+maps&utm_medium=seo+maps&utm_source=google+Maps" class="btn-small" data-i18n="info.bookNow">Book Now</a>
                     </div>
                 </div>
 
                 <div class="info-card">
-                    <h2>❓ FAQ</h2>
+                    <h2>❓ <span data-i18n="info.faq">FAQ</span></h2>
                     <div class="faq-item">
-                        <h3>Can I bring a plus one?</h3>
-                        <p>Please check your invitation. If you have a plus one, their name will be included.</p>
+                        <h3 data-i18n="info.plusOne">Can I bring a plus one?</h3>
+                        <p data-i18n="info.plusOneAnswer">Please check your invitation. If you have a plus one, their name will be included.</p>
                     </div>
                     <div class="faq-item">
-                        <h3>Is there parking available?</h3>
-                        <p>Yes, complimentary parking is available at the venue.</p>
+                        <h3 data-i18n="info.parking">Is there parking available?</h3>
+                        <p data-i18n="info.parkingAnswer">Yes, complimentary parking is available at the venue.</p>
                     </div>
                     <div class="faq-item">
-                        <h3>Will the ceremony be indoors or outdoors?</h3>
-                        <p>The ceremony will be outdoors (weather permitting) with an indoor backup plan.</p>
+                        <h3 data-i18n="info.ceremonyLocation">Will the ceremony be indoors or outdoors?</h3>
+                        <p data-i18n="info.ceremonyLocationAnswer">The ceremony will be outdoors (weather permitting) with an indoor backup plan.</p>
                     </div>
                     <div class="faq-item">
-                        <h3>What if I have dietary restrictions?</h3>
-                        <p>Please let us know in your RSVP and we'll accommodate your needs.</p>
+                        <h3 data-i18n="info.dietary">What if I have dietary restrictions?</h3>
+                        <p data-i18n="info.dietaryAnswer">Please let us know in your RSVP and we'll accommodate your needs.</p>
                     </div>
                 </div>
             </div>
@@ -150,7 +159,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Audrey & Josue-Daniel | Made with ❤️</p>
+        <p>&copy; 2026 Audrey & Josue-Daniel | <span data-i18n="common.madeWith">Made with ❤️</span></p>
     </footer>
 
     <script type="module" src="../app.js"></script>
