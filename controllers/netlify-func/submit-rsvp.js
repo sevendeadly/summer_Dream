@@ -77,12 +77,14 @@ exports.handler = async (event, context) => {
 
     // Store in Netlify Blob Storage
     // Support local development by passing context when available
-    const storeOptions = { name: 'rsvps' };
+    /* const storeOptions = { name: 'rsvps' };
     if (context?.site?.id && context?.site?.apiToken) {
       storeOptions.siteID = context.site.id;
       storeOptions.token = context.site.apiToken;
     }
-    const store = getStore(storeOptions);
+    const store = getStore(storeOptions); */
+    const store = getStore('rsvps');
+    
     await store.set(rsvpId, JSON.stringify(rsvp));
 
     console.log(`✅ RSVP stored: ${rsvpId} - ${rsvp.name} (${rsvp.email})`);
