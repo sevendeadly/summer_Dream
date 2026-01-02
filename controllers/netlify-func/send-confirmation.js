@@ -43,7 +43,8 @@ exports.handler = async (event, context) => {
     const data = JSON.parse(event.body);
     console.log(`[${requestId}] Request data:`, {
       rsvpId: data.rsvpId,
-      status: data.status
+      status: data.status,
+      declineReason: data.declineReason ? '[provided]' : 'none'
     });
 
     // Verify admin secret from header
@@ -130,14 +131,27 @@ exports.handler = async (event, context) => {
     const newStatus = data.status === 'Approved' ? 'approved' : 'declined';
     rsvp.status = newStatus;
     rsvp.approvedAt = new Date().toISOString();
+    
+    // Store decline reason if provided
+    const declineReason = data.declineReason || '';
 
     // Initialize SendGrid
     sgMail.setApiKey(SENDGRID_API_KEY);
 
-    // Email template based on admin action (newStatus), not guest's original attendance response
-    const emailTemplate = newStatus === 'approved' 
-      ? getAcceptedTemplate(rsvp)
-      : getDeclinedTemplate(rsvp);
+    // Email template selection logic:
+    // - If approved: send accepted template
+    // - If declined AND user wanted to attend: send admin-declined template (with reason)
+    // - If declined AND user didn't want to attend: send user-declined template (confirmation of their choice)
+    let emailTemplate;
+    if (newStatus === 'approved') {
+      emailTemplate = getAcceptedTemplate(rsvp);
+    } else if (rsvp.attending === 'yes') {
+      // User wanted to attend but admin declined
+      emailTemplate = getAdminDeclinedTemplate(rsvp, declineReason);
+    } else {
+      // User didn't want to attend, admin confirming their choice
+      emailTemplate = getDeclinedTemplate(rsvp);
+    }
 
     // Send email via SendGrid
     await sgMail.send({
@@ -186,6 +200,19 @@ exports.handler = async (event, context) => {
   }
 };
 
+// Helper function to escape HTML to prevent XSS
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
 // Email template for accepted RSVPs
 function getAcceptedTemplate(data) {
   return {
@@ -216,16 +243,16 @@ function getAcceptedTemplate(data) {
           </div>
           
           <div class="content">
-            <h2 style="color: #d4a5a5;">Dear ${data.name},</h2>
+            <h2 style="color: #d4a5a5;">Dear ${escapeHtml(data.name)},</h2>
             
             <p>We're absolutely thrilled that you'll be joining us on our special day! Your RSVP has been confirmed.</p>
             
             <div class="details">
               <h3 style="color: #c9a86a; margin-top: 0;">Your RSVP Details</h3>
-              <p><strong>Name:</strong> ${data.name}</p>
-              <p><strong>Number of Guests:</strong> ${data.guests}</p>
-              ${data.dietary ? `<p><strong>Dietary Requirements:</strong> ${data.dietary}</p>` : ''}
-              ${data.message ? `<p><strong>Your Message:</strong> "${data.message}"</p>` : ''}
+              <p><strong>Name:</strong> ${escapeHtml(data.name)}</p>
+              <p><strong>Number of Guests:</strong> ${escapeHtml(data.guests)}</p>
+              ${data.dietary ? `<p><strong>Dietary Requirements:</strong> ${escapeHtml(data.dietary)}</p>` : ''}
+              ${data.message ? `<p><strong>Your Message:</strong> "${escapeHtml(data.message)}"</p>` : ''}
             </div>
             
             <h3 style="color: #d4a5a5;">Wedding Details</h3>
@@ -269,7 +296,7 @@ function getAcceptedTemplate(data) {
   };
 }
 
-// Email template for declined RSVPs
+// Email template for declined RSVPs (when user didn't want to attend)
 function getDeclinedTemplate(data) {
   return {
     subject: 'Thank You for Letting Us Know',
@@ -294,17 +321,77 @@ function getDeclinedTemplate(data) {
           </div>
           
           <div class="content">
-            <h2 style="color: #d4a5a5;">Dear ${data.name},</h2>
+            <h2 style="color: #d4a5a5;">Dear ${escapeHtml(data.name)},</h2>
             
             <p>Thank you so much for taking the time to let us know you won't be able to join us on June 12, 2026.</p>
             
             <p>We're sad you can't be there, but we completely understand. We'll be thinking of you on our special day! 💕</p>
             
-            ${data.message ? `<p style="font-style: italic; background: #faf8f5; padding: 15px; border-radius: 5px;">Your message: "${data.message}"</p>` : ''}
+            ${data.message ? `<p style="font-style: italic; background: #faf8f5; padding: 15px; border-radius: 5px;">Your message: "${escapeHtml(data.message)}"</p>` : ''}
             
             <p style="margin-top: 30px;">After the wedding, we'll share photos and memories on our website. We'd love for you to check them out!</p>
             
             <p style="margin-top: 30px;"><em>With love,</em><br>
+            <strong>J-D & A-N</strong></p>
+          </div>
+          
+          <div class="footer">
+            <p>© 2026 J-D & A-N Wedding</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+}
+
+// Email template for when admin declines a user who wanted to attend
+function getAdminDeclinedTemplate(data, reason) {
+  return {
+    subject: 'Update on Your RSVP Request',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #d4a5a5 0%, #c9a86a 100%); 
+                   color: white; padding: 40px 20px; text-align: center; }
+          .content { background: #ffffff; padding: 30px; }
+          .reason-box { background: #fff5f5; border-left: 4px solid #d4a5a5; 
+                       padding: 20px; margin: 20px 0; border-radius: 4px; }
+          .footer { text-align: center; padding: 20px; color: #666; font-size: 0.9em; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 2.5em;">💕</h1>
+            <h2 style="margin: 10px 0 0 0;">J-D & A-N</h2>
+          </div>
+          
+          <div class="content">
+            <h2 style="color: #d4a5a5;">Dear ${escapeHtml(data.name)},</h2>
+            
+            <p>Thank you so much for your interest in joining us on our special day, June 12, 2026.</p>
+            
+            <p>We truly appreciate you taking the time to submit your RSVP. However, after careful consideration, we're unable to accommodate your request at this time.</p>
+            
+            ${reason ? `
+            <div class="reason-box">
+              <h3 style="color: #c9a86a; margin-top: 0;">Reason:</h3>
+              <p style="margin-bottom: 0;">${escapeHtml(reason).replace(/\n/g, '<br>')}</p>
+            </div>
+            ` : ''}
+            
+            <p>We understand this may be disappointing, and we sincerely apologize for any inconvenience this may cause.</p>
+            
+            <p>We hope you understand, and we'd still love to celebrate with you in other ways. After the wedding, we'll share photos and memories on our website, and we'd be delighted if you'd check them out!</p>
+            
+            <p style="margin-top: 30px;">If you have any questions or concerns, please don't hesitate to reach out to us.</p>
+            
+            <p style="margin-top: 30px;"><em>With love and understanding,</em><br>
             <strong>J-D & A-N</strong></p>
           </div>
           
