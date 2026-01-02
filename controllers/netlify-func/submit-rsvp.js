@@ -166,12 +166,8 @@ exports.handler = async (event, context) => {
       });
       throw new Error(`Failed to store RSVP in blob storage: ${storeError.message}`);
     }
-    const store = getStore(storeOptions); */
-    const store = getStore('rsvps');
-    
-    await store.set(rsvpId, JSON.stringify(rsvp));
 
-    console.log(`✅ RSVP stored: ${rsvpId} - ${rsvp.name} (${rsvp.email})`);
+    console.log(`[${requestId}] ✅ RSVP submission completed successfully`);
 
     console.log(`[${requestId}] ✅ RSVP submission completed successfully`);
 
