@@ -317,13 +317,50 @@ export class AdminController {
             return;
         }
         
-        if (!confirm(`Send decline email to ${rsvp.name} (${rsvp.email})?`)) return;
+        // Determine if we need to ask for a reason
+        const userWantedToAttend = rsvp.attending === 'yes';
+        let declineReason = '';
+        
+        if (userWantedToAttend) {
+            // User wanted to attend but admin is declining - ask for reason
+            const reason = prompt(
+                `This guest wanted to attend. Please provide a reason for declining their RSVP:\n\n` +
+                `(This reason will be included in the email sent to ${rsvp.name})`,
+                ''
+            );
+            
+            if (reason === null) {
+                // User cancelled the prompt
+                return;
+            }
+            
+            declineReason = reason.trim();
+            
+            if (!confirm(`Send decline email to ${rsvp.name} (${rsvp.email}) with the provided reason?`)) {
+                return;
+            }
+        } else {
+            // User didn't want to attend - just confirm their choice
+            if (!confirm(`Send confirmation email to ${rsvp.name} (${rsvp.email}) confirming they won't be attending?`)) {
+                return;
+            }
+        }
 
-        console.log(`📧 Declining RSVP: ${rsvpId}`);
+        console.log(`📧 Declining RSVP: ${rsvpId}`, userWantedToAttend ? '(user wanted to attend)' : '(user declined)');
 
         try {
             // Encode adminSecret to base64 to handle non-ASCII characters in headers
             const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            
+            const requestBody = {
+                rsvpId: rsvpId,
+                status: 'Declined'
+            };
+            
+            // Only include declineReason if user wanted to attend
+            if (userWantedToAttend && declineReason) {
+                requestBody.declineReason = declineReason;
+            }
             
             const response = await fetch('/.netlify/functions/send-confirmation', {
                 method: 'POST',
@@ -331,10 +368,7 @@ export class AdminController {
                     'Content-Type': 'application/json',
                     'X-Admin-Secret': encodedSecret
                 },
-                body: JSON.stringify({
-                    rsvpId: rsvpId,
-                    status: 'Declined'
-                })
+                body: JSON.stringify(requestBody)
             });
 
             const responseData = await response.json().catch(() => ({}));
