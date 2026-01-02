@@ -89,8 +89,10 @@ export class RSVPController {
                 throw new Error('Submission failed');
             }
         } catch (error) {
-            this.showError('Oops! Something went wrong. Please try again or contact us directly.');
             console.error('Error submitting RSVP:', error);
+            // Show more specific error message if available
+            const errorMessage = error.response?.data?.error || error.message || 'Oops! Something went wrong. Please try again or contact us directly.';
+            this.showError(errorMessage);
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit RSVP';
@@ -100,6 +102,7 @@ export class RSVPController {
     // Submit RSVP to Netlify function
     async submitRSVP(data) {
         try {
+            console.log('Submitting RSVP to Netlify function...');
             const response = await fetch('/.netlify/functions/submit-rsvp', {
                 method: 'POST',
                 headers: {
@@ -108,11 +111,16 @@ export class RSVPController {
                 body: JSON.stringify(data),
             });
             
+            const responseData = await response.json();
+            console.log('Response from server:', responseData);
+            
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                // Include server error message if available
+                const errorMsg = responseData.error || responseData.details || `HTTP ${response.status}`;
+                throw new Error(errorMsg);
             }
             
-            return await response.json();
+            return responseData;
         } catch (error) {
             console.error('Error submitting RSVP:', error);
             throw error;

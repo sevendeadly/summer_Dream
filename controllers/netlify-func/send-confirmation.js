@@ -8,8 +8,12 @@ const sgMail = require('@sendgrid/mail');
 const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  console.log(`[${requestId}] 📧 Send confirmation request received`);
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
+    console.warn(`[${requestId}] ⚠️ Invalid HTTP method: ${event.httpMethod}`);
     return {
       statusCode: 405,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
@@ -21,7 +25,14 @@ exports.handler = async (event, context) => {
   const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@yourwedding.com';
   const ADMIN_SECRET = process.env.ADMIN_SECRET;
   
+  console.log(`[${requestId}] Environment check:`, {
+    hasSendGridKey: !!SENDGRID_API_KEY,
+    fromEmail: SENDGRID_FROM_EMAIL,
+    hasAdminSecret: !!ADMIN_SECRET
+  });
+  
   if (!SENDGRID_API_KEY) {
+    console.error(`[${requestId}] ❌ SendGrid API key not configured`);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'SendGrid API key not configured' }),
@@ -30,16 +41,95 @@ exports.handler = async (event, context) => {
 
   try {
     const data = JSON.parse(event.body);
+    console.log(`[${requestId}] Request data:`, {
+      rsvpId: data.rsvpId,
+      status: data.status
+    });
 
     // Verify admin secret from header
-    const secret = event.headers['x-admin-secret'];
+    let secret = event.headers['x-admin-secret'];
+    
+    // Decode base64-encoded secret (handles non-ASCII characters)
+    // Node.js doesn't have atob - use Buffer instead
+    const originalSecret = secret;
+    try {
+      if (secret) {
+        // Check if it looks like base64 (optional - for backward compatibility)
+        const isBase64 = /^[A-Za-z0-9+/=]+$/.test(secret) && secret.length > 10;
+        
+        if (isBase64) {
+          // Decode base64 using Node.js Buffer
+          const decoded = Buffer.from(secret, 'base64').toString('utf-8');
+          secret = decoded;
+          console.log(`[${requestId}] ✅ Decoded base64 secret (length: ${secret.length})`);
+        } else {
+          // Not base64, use as-is (backward compatibility)
+          console.log(`[${requestId}] ℹ️ Secret doesn't appear to be base64, using as-is`);
+        }
+      }
+    } catch (decodeError) {
+      // If decoding fails, try using the secret as-is (backward compatibility)
+      console.warn(`[${requestId}] ⚠️ Failed to decode secret, trying as-is:`, decodeError.message);
+      secret = originalSecret; // Fall back to original
+    }
+    
     if (secret !== ADMIN_SECRET) {
-      console.warn('⚠️ Unauthorized confirmation attempt');
+      console.warn(`[${requestId}] ⚠️ Unauthorized confirmation attempt`);
       return {
         statusCode: 401,
         body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
+    console.log(`[${requestId}] ✅ Admin authenticated`);
+
+    // Validate rsvpId
+    if (!data.rsvpId) {
+      console.warn(`[${requestId}] ⚠️ Missing rsvpId in request`);
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'rsvpId is required' }),
+      };
+    }
+
+    // Get RSVP data from storage
+    console.log(`[${requestId}] 💾 Fetching RSVP from storage...`);
+    let store;
+    try {
+      // In production, Netlify automatically provides the execution context
+      // Try auto-detection first (works in production Netlify)
+      store = getStore('rsvps');
+      console.log(`[${requestId}] ✅ Blob store initialized (auto-detect - production mode)`);
+    } catch (autoDetectError) {
+      // If auto-detection fails, try with explicit env vars (for local dev)
+      if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
+        store = getStore({
+          name: 'rsvps',
+          siteID: process.env.NETLIFY_SITE_ID,
+          token: process.env.NETLIFY_AUTH_TOKEN
+        });
+        console.log(`[${requestId}] ✅ Blob store initialized with env vars (local dev mode)`);
+      } else {
+        // Re-throw the original error if no fallback available
+        throw autoDetectError;
+      }
+    }
+
+    const rsvpData = await store.get(data.rsvpId);
+    
+    if (!rsvpData) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'RSVP not found' }),
+      };
+    }
+
+    const rsvp = JSON.parse(rsvpData);
+
+    // Determine new status based on action (approve or decline)
+    // If status is 'Approved' in request, set to approved, else declined
+    const newStatus = data.status === 'Approved' ? 'approved' : 'declined';
+    rsvp.status = newStatus;
+    rsvp.approvedAt = new Date().toISOString();
 
     // Validate rsvpId
     if (!data.rsvpId) {
@@ -99,17 +189,34 @@ exports.handler = async (event, context) => {
 
     console.log(`📧 Confirmation email sent to ${rsvp.email}`);
 
+    console.log(`[${requestId}] ✅ Confirmation process completed successfully`);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ success: true, message: 'Email sent and RSVP updated' }),
     };
   } catch (error) {
-    console.error('❌ Error sending email:', error);
+    console.error(`[${requestId}] ❌ ========== ERROR OCCURRED ==========`);
+    console.error(`[${requestId}] Error name:`, error.name);
+    console.error(`[${requestId}] Error message:`, error.message);
+    console.error(`[${requestId}] Stack trace:`, error.stack);
+    
+    // Check for SendGrid-specific errors
+    if (error.response) {
+      console.error(`[${requestId}] SendGrid error response:`, {
+        statusCode: error.response.statusCode,
+        body: error.response.body
+      });
+    }
+    
+    console.error(`[${requestId}] =======================================`);
+    
     return {
       statusCode: 500,
       body: JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        ...(process.env.NETLIFY_DEV && { errorType: error.name })
       }),
     };
   }
@@ -160,11 +267,13 @@ function getAcceptedTemplate(data) {
             <h3 style="color: #d4a5a5;">Wedding Details</h3>
             <p><strong>Date:</strong> Friday, June 12, 2026</p>
             <p><strong>Ceremony:</strong> 3:30 PM</p>
-            <p><strong>Venue:</strong> [Venue Name & Address]</p>
+            <p><strong>Venue:</strong> <p><strong>Gardenia Receptions</strong></p>
+                    <p>74 Rue de Dampont</p>
+                    <p>Us, Ile-de-France</p></p>
             <p><strong>Dress Code:</strong> Semi-Formal / Cocktail Attire</p>
             
             <center>
-              <a href="https://sevendeadly.github.io/summer_Dream/views/info.html" class="button">
+              <a href="https://summerdreams.netlify.app/views/info" class="button">
                 View Full Wedding Details
               </a>
             </center>
