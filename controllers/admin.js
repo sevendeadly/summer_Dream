@@ -111,30 +111,61 @@ export class AdminController {
     // ===========================
 
     async loadRSVPs() {
+        console.log('📥 Loading RSVPs from server...');
+        
+        // Show loading state
+        if (this.rsvpTable) {
+            this.rsvpTable.innerHTML = '<div style="padding: 40px; text-align: center; color: #999;">Loading RSVPs...</div>';
+        }
+        
         try {
+            // Encode adminSecret to base64 to handle non-ASCII characters in headers
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            
             const response = await fetch('/.netlify/functions/get-rsvps', {
                 method: 'GET',
                 headers: {
-                    'X-Admin-Secret': this.adminSecret,
+                    'X-Admin-Secret': encodedSecret,
                     'Content-Type': 'application/json'
                 }
             });
 
+            console.log('Response status:', response.status);
+
             if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Error response:', errorData);
+                
                 if (response.status === 401) {
-                    alert('Invalid admin secret');
+                    alert('Invalid admin secret. Please login again.');
                     this.handleLogout();
                     return;
                 }
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(errorData.error || `HTTP ${response.status}: Failed to load RSVPs`);
             }
 
             const data = await response.json();
+            console.log('✅ Loaded RSVPs:', data);
+            
             this.allRSVPs = data.results || [];
+            console.log(`Total RSVPs: ${this.allRSVPs.length}`);
+            
             this.applyFilters();
         } catch (error) {
-            console.error('Error loading RSVPs:', error);
-            alert('Failed to load RSVPs. Check admin secret and try again.');
+            console.error('❌ Error loading RSVPs:', error);
+            
+            // Show error in table
+            if (this.rsvpTable) {
+                this.rsvpTable.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #dc3545;">
+                        <p><strong>Error loading RSVPs</strong></p>
+                        <p>${error.message}</p>
+                        <button onclick="adminController.loadRSVPs()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Retry</button>
+                    </div>
+                `;
+            }
+            
+            alert(`Failed to load RSVPs: ${error.message}`);
         }
     }
 
@@ -190,24 +221,38 @@ export class AdminController {
         const end = start + this.itemsPerPage;
         const pageRSVPs = this.filteredRSVPs.slice(start, end);
 
+        // Show empty state if no RSVPs
+        if (pageRSVPs.length === 0) {
+            this.rsvpTable.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #999;">
+                    <p style="font-size: 1.2em; margin-bottom: 10px;">No RSVPs found</p>
+                    <p>Waiting for guests to submit their RSVPs...</p>
+                </div>
+            `;
+            this.updatePagination();
+            return;
+        }
+
         let html = '<table class="rsvp-table">';
         html += '<thead><tr>';
-        html += '<th onclick="adminController.sortBy(\'name\')">Name</th>';
-        html += '<th onclick="adminController.sortBy(\'email\')">Email</th>';
-        html += '<th onclick="adminController.sortBy(\'attending\')">Attending</th>';
+        html += '<th onclick="adminController.sortBy(\'name\')" style="cursor: pointer;">Name ⇅</th>';
+        html += '<th onclick="adminController.sortBy(\'email\')" style="cursor: pointer;">Email ⇅</th>';
+        html += '<th onclick="adminController.sortBy(\'attending\')" style="cursor: pointer;">Attending ⇅</th>';
         html += '<th>Guests</th>';
-        html += '<th onclick="adminController.sortBy(\'status\')">Status</th>';
+        html += '<th onclick="adminController.sortBy(\'status\')" style="cursor: pointer;">Status ⇅</th>';
         html += '<th>Actions</th>';
         html += '</tr></thead><tbody>';
 
         pageRSVPs.forEach(rsvp => {
             const statusClass = `status-${rsvp.status.toLowerCase()}`;
             const statusDisplay = rsvp.status.charAt(0).toUpperCase() + rsvp.status.slice(1);
+            const attendingDisplay = rsvp.attending === 'yes' ? '✓ Yes' : '✗ No';
+            
             html += `<tr>
                 <td>${this.escapeHtml(rsvp.name)}</td>
                 <td>${this.escapeHtml(rsvp.email)}</td>
-                <td>${rsvp.attending}</td>
-                <td>${rsvp.guests}</td>
+                <td>${attendingDisplay}</td>
+                <td>${rsvp.guests || 1}</td>
                 <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
                 <td class="actions">
                     ${rsvp.status !== 'approved' ? `<button onclick="adminController.approveRSVP('${rsvp.id}')">Approve</button>` : ''}
@@ -224,14 +269,25 @@ export class AdminController {
     }
 
     async approveRSVP(rsvpId) {
-        if (!confirm('Send confirmation email to this guest?')) return;
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            alert('RSVP not found');
+            return;
+        }
+        
+        if (!confirm(`Send confirmation email to ${rsvp.name} (${rsvp.email})?`)) return;
+
+        console.log(`📧 Approving RSVP: ${rsvpId}`);
 
         try {
+            // Encode adminSecret to base64 to handle non-ASCII characters in headers
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            
             const response = await fetch('/.netlify/functions/send-confirmation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Admin-Secret': this.adminSecret
+                    'X-Admin-Secret': encodedSecret
                 },
                 body: JSON.stringify({
                     rsvpId: rsvpId,
@@ -239,25 +295,41 @@ export class AdminController {
                 })
             });
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const responseData = await response.json().catch(() => ({}));
+            console.log('Response:', responseData);
 
-            alert('Confirmation email sent!');
-            this.loadRSVPs();
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            alert('✅ Confirmation email sent successfully!');
+            await this.loadRSVPs();
         } catch (error) {
-            console.error('Error approving RSVP:', error);
-            alert('Failed to approve RSVP');
+            console.error('❌ Error approving RSVP:', error);
+            alert(`Failed to approve RSVP: ${error.message}`);
         }
     }
 
     async declineRSVP(rsvpId) {
-        if (!confirm('Send decline email to this guest?')) return;
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            alert('RSVP not found');
+            return;
+        }
+        
+        if (!confirm(`Send decline email to ${rsvp.name} (${rsvp.email})?`)) return;
+
+        console.log(`📧 Declining RSVP: ${rsvpId}`);
 
         try {
+            // Encode adminSecret to base64 to handle non-ASCII characters in headers
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            
             const response = await fetch('/.netlify/functions/send-confirmation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Admin-Secret': this.adminSecret
+                    'X-Admin-Secret': encodedSecret
                 },
                 body: JSON.stringify({
                     rsvpId: rsvpId,
@@ -265,13 +337,18 @@ export class AdminController {
                 })
             });
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const responseData = await response.json().catch(() => ({}));
+            console.log('Response:', responseData);
 
-            alert('Decline email sent!');
-            this.loadRSVPs();
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            alert('✅ Decline email sent successfully!');
+            await this.loadRSVPs();
         } catch (error) {
-            console.error('Error declining RSVP:', error);
-            alert('Failed to decline RSVP');
+            console.error('❌ Error declining RSVP:', error);
+            alert(`Failed to decline RSVP: ${error.message}`);
         }
     }
 
