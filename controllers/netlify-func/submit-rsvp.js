@@ -169,6 +169,8 @@ exports.handler = async (event, context) => {
 
     console.log(`[${requestId}] ✅ RSVP submission completed successfully`);
 
+    console.log(`[${requestId}] ✅ RSVP submission completed successfully`);
+
     return {
       statusCode: 200,
       body: JSON.stringify({
