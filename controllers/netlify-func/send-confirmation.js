@@ -131,6 +131,42 @@ exports.handler = async (event, context) => {
     rsvp.status = newStatus;
     rsvp.approvedAt = new Date().toISOString();
 
+    // Validate rsvpId
+    if (!data.rsvpId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'rsvpId is required' }),
+      };
+    }
+
+    // Get RSVP data from storage
+    
+    // Support local development by passing context when available
+    /* const storeOptions = { name: 'rsvps' };
+    if (context?.site?.id && context?.site?.apiToken) {
+      storeOptions.siteID = context.site.id;
+      storeOptions.token = context.site.apiToken;
+    }
+    const store = getStore(storeOptions); */
+    const store = getStore('rsvps');
+    
+    const rsvpData = await store.get(data.rsvpId);
+    
+    if (!rsvpData) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'RSVP not found' }),
+      };
+    }
+
+    const rsvp = JSON.parse(rsvpData);
+
+    // Determine new status based on action (approve or decline)
+    // If status is 'Approved' in request, set to approved, else declined
+    const newStatus = data.status === 'Approved' ? 'approved' : 'declined';
+    rsvp.status = newStatus;
+    rsvp.approvedAt = new Date().toISOString();
+
     // Initialize SendGrid
     sgMail.setApiKey(SENDGRID_API_KEY);
 
