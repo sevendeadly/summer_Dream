@@ -44,7 +44,8 @@ exports.handler = async (event, context) => {
     console.log(`[${requestId}] Request data:`, {
       rsvpId: data.rsvpId,
       status: data.status,
-      declineReason: data.declineReason ? '[provided]' : 'none'
+      declineReason: data.declineReason ? '[provided]' : 'none',
+      adminMessage: data.adminMessage ? '[provided]' : 'none'
     });
 
     // Verify admin secret from header
@@ -144,7 +145,8 @@ exports.handler = async (event, context) => {
     // - If declined AND user didn't want to attend: send user-declined template (confirmation of their choice)
     let emailTemplate;
     if (newStatus === 'approved') {
-      emailTemplate = getAcceptedTemplate(rsvp);
+      const adminMessage = data.adminMessage || '';
+      emailTemplate = getAcceptedTemplate(rsvp, adminMessage);
     } else if (rsvp.attending === 'yes') {
       // User wanted to attend but admin declined
       emailTemplate = getAdminDeclinedTemplate(rsvp, declineReason);
@@ -214,7 +216,7 @@ function escapeHtml(text) {
 }
 
 // Email template for accepted RSVPs
-function getAcceptedTemplate(data) {
+function getAcceptedTemplate(data, adminMessage = '') {
   return {
     subject: '✨ Your RSVP is Confirmed - We Can\'t Wait to See You!',
     html: `
@@ -228,6 +230,10 @@ function getAcceptedTemplate(data) {
                    color: white; padding: 40px 20px; text-align: center; }
           .content { background: #ffffff; padding: 30px; }
           .details { background: #faf8f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .admin-message { background: #f0f8ff; border-left: 4px solid #d4a5a5; 
+                          padding: 20px; margin: 20px 0; border-radius: 4px; }
+          .limitation-notice { background: #fff5f5; border-left: 4px solid #c9a86a; 
+                              padding: 20px; margin: 20px 0; border-radius: 4px; }
           .footer { text-align: center; padding: 20px; color: #666; font-size: 0.9em; }
           .button { display: inline-block; background: #d4a5a5; color: white; 
                    padding: 12px 30px; text-decoration: none; border-radius: 5px; 
@@ -246,6 +252,13 @@ function getAcceptedTemplate(data) {
             <h2 style="color: #d4a5a5;">Dear ${escapeHtml(data.name)},</h2>
             
             <p>We're absolutely thrilled that you'll be joining us on our special day! Your RSVP has been confirmed.</p>
+            
+            ${adminMessage ? `
+            <div class="admin-message">
+              <h3 style="color: #c9a86a; margin-top: 0;">A Personal Note:</h3>
+              <p style="margin-bottom: 0;">${escapeHtml(adminMessage).replace(/\n/g, '<br>')}</p>
+            </div>
+            ` : ''}
             
             <div class="details">
               <h3 style="color: #c9a86a; margin-top: 0;">Your RSVP Details</h3>
