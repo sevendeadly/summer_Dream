@@ -275,13 +275,34 @@ export class AdminController {
             return;
         }
         
-        if (!confirm(`Send confirmation email to ${rsvp.name} (${rsvp.email})?`)) return;
+        // Prompt for optional admin message
+        const adminMessage = prompt(
+            `Send confirmation email to ${rsvp.name} (${rsvp.email})?\n\n` +
+            `(Optional) Add a personal message to include in the email:\n` +
+            `(Leave empty and click OK to send without a message)`,
+            ''
+        );
+        
+        if (adminMessage === null) {
+            // User cancelled the prompt
+            return;
+        }
 
-        console.log(`📧 Approving RSVP: ${rsvpId}`);
+        console.log(`📧 Approving RSVP: ${rsvpId}`, adminMessage ? '(with message)' : '(no message)');
 
         try {
             // Encode adminSecret to base64 to handle non-ASCII characters in headers
             const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            
+            const requestBody = {
+                rsvpId: rsvpId,
+                status: 'Approved'
+            };
+            
+            // Only include adminMessage if provided
+            if (adminMessage && adminMessage.trim()) {
+                requestBody.adminMessage = adminMessage.trim();
+            }
             
             const response = await fetch('/.netlify/functions/send-confirmation', {
                 method: 'POST',
@@ -289,10 +310,7 @@ export class AdminController {
                     'Content-Type': 'application/json',
                     'X-Admin-Secret': encodedSecret
                 },
-                body: JSON.stringify({
-                    rsvpId: rsvpId,
-                    status: 'Approved'
-                })
+                body: JSON.stringify(requestBody)
             });
 
             const responseData = await response.json().catch(() => ({}));
