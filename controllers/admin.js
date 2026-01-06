@@ -8,9 +8,10 @@ export class AdminController {
         this.allRSVPs = [];
         this.filteredRSVPs = [];
         this.currentPage = 1;
-        this.itemsPerPage = 10;
+        this.itemsPerPage = 25; // Default to 25 rows
         this.sortColumn = 'submittedAt';
         this.sortDirection = 'desc';
+        this.autoRefreshInterval = null; // Store interval ID for auto-refresh
         
         // DOM elements
         this.loginSection = document.getElementById('login-section');
@@ -21,10 +22,12 @@ export class AdminController {
         this.filterAttending = document.getElementById('filter-attending');
         this.filterStatus = document.getElementById('filter-status');
         this.searchInput = document.getElementById('search-input');
+        this.rowsPerPage = document.getElementById('rows-per-page');
         this.rsvpTable = document.getElementById('rsvp-table');
         this.statsAttending = document.getElementById('stats-attending');
         this.statsPending = document.getElementById('stats-pending');
         this.statsTotal = document.getElementById('stats-total');
+        this.statsApprovedGuests = document.getElementById('stats-approved-guests');
         this.paginationControls = document.getElementById('pagination-controls');
     }
 
@@ -73,6 +76,12 @@ export class AdminController {
         if (this.searchInput) {
             this.searchInput.addEventListener('input', () => this.applyFilters());
         }
+
+        if (this.rowsPerPage) {
+            this.rowsPerPage.addEventListener('change', () => this.handleRowsPerPageChange());
+            // Set default value
+            this.rowsPerPage.value = this.itemsPerPage.toString();
+        }
     }
 
     handleLogin() {
@@ -89,6 +98,9 @@ export class AdminController {
     }
 
     handleLogout() {
+        // Clear auto-refresh interval
+        this.stopAutoRefresh();
+        
         localStorage.removeItem('adminSecret');
         this.adminSecret = '';
         this.allRSVPs = [];
@@ -99,11 +111,36 @@ export class AdminController {
     showLogin() {
         if (this.loginSection) this.loginSection.style.display = 'block';
         if (this.dashboardSection) this.dashboardSection.style.display = 'none';
+        // Stop auto-refresh when showing login
+        this.stopAutoRefresh();
     }
 
     showDashboard() {
         if (this.loginSection) this.loginSection.style.display = 'none';
         if (this.dashboardSection) this.dashboardSection.style.display = 'block';
+        // Start auto-refresh when dashboard is shown
+        this.startAutoRefresh();
+    }
+
+    // Start auto-refresh: reload RSVPs every 5 minutes
+    startAutoRefresh() {
+        // Clear any existing interval first
+        this.stopAutoRefresh();
+        
+        // Set interval to refresh every 5 minutes (300000 milliseconds)
+        this.autoRefreshInterval = setInterval(() => {
+            console.log('🔄 Auto-refreshing RSVPs...');
+            this.loadRSVPs();
+        }, 5 * 60 * 1000); // 5 minutes
+    }
+
+    // Stop auto-refresh
+    stopAutoRefresh() {
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+            this.autoRefreshInterval = null;
+            console.log('⏸️ Auto-refresh stopped');
+        }
     }
 
     // ===========================
@@ -211,6 +248,13 @@ export class AdminController {
         this.filteredRSVPs = filtered;
         this.currentPage = 1;
         this.updateStats();
+        this.displayRSVPs();
+    }
+
+    handleRowsPerPageChange() {
+        const newRowsPerPage = parseInt(this.rowsPerPage.value) || 25;
+        this.itemsPerPage = newRowsPerPage;
+        this.currentPage = 1; // Reset to first page when changing rows per page
         this.displayRSVPs();
     }
 
@@ -426,10 +470,16 @@ export class AdminController {
         const total = this.filteredRSVPs.length;
         const attending = this.filteredRSVPs.filter(r => r.attending === 'yes').length;
         const pending = this.filteredRSVPs.filter(r => r.status === 'pending').length;
+        
+        // Calculate total approved attending guests (sum of guests count for approved RSVPs where attending === 'yes')
+        const approvedAttendingGuests = this.filteredRSVPs
+            .filter(r => r.status === 'approved' && r.attending === 'yes')
+            .reduce((sum, r) => sum + (parseInt(r.guests) || 1), 0);
 
         if (this.statsTotal) this.statsTotal.textContent = total;
         if (this.statsAttending) this.statsAttending.textContent = attending;
         if (this.statsPending) this.statsPending.textContent = pending;
+        if (this.statsApprovedGuests) this.statsApprovedGuests.textContent = approvedAttendingGuests;
     }
 
     updatePagination() {
@@ -498,4 +548,11 @@ let adminController;
 document.addEventListener('DOMContentLoaded', function() {
     adminController = new AdminController();
     adminController.init();
+});
+
+// Cleanup auto-refresh when page is unloaded
+window.addEventListener('beforeunload', function() {
+    if (adminController) {
+        adminController.stopAutoRefresh();
+    }
 });

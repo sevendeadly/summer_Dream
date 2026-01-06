@@ -1,317 +1,457 @@
-# Audrey & Josue-Daniel 2026 Wedding Website
+# J-D & A-N Wedding Website - Production Release v2.1.0
 
-A lightweight, simple, and beautiful wedding website with countdown timer, RSVP form, gift pot, and photo albums. Now with a clean MVC (Model-View-Controller) architecture for better organization and maintainability.
+> A modern, full-featured wedding website with RSVP management, email confirmations, admin dashboard, and multi-language support. Built with clean MVC architecture and deployed on Netlify.
 
-## 🎉 Wedding Date: June 12, 2026
+## 🎉 Overview
 
-## 🎁 Two Versions Available
+This is a production-ready wedding website featuring a complete RSVP system with email confirmations, an admin dashboard for managing guest responses, and a beautiful, responsive design. The system uses Netlify Blobs for data storage and SendGrid for email delivery.
 
-This repository includes **two complete versions** of the wedding website:
+**Wedding Date:** June 12, 2026  
+**Version:** 2.1.0 (Production Release)  
+**Architecture:** MVC (Model-View-Controller)  
+**Deployment:** Netlify
 
-1. **Multi-Page MVC Version** (Recommended) - Traditional multi-page site with clean architecture
-2. **React SPA Version** - Single-page React application
-
-**📊 [See detailed comparison →](VERSIONS.md)** to choose the best version for you.
-
-**TL;DR:** If you're unsure, use the **Multi-Page MVC Version** - it's easier to customize and maintain.
+---
 
 ## ✨ Features
 
-- **Home Page** - Elegant landing page with countdown timer to the big day
-- **Wedding Info** - Venue details, schedule, dress code, accommodations, and FAQ
-- **Gift Pot** - Multiple payment options (PayPal, Wise, Bank Transfer, Wero) and wishlist
-- **RSVP Form** - Easy RSVP with optional Notion integration
-- **Albums** - Photo gallery (automatically hidden until after June 12, 2026)
-- **3 Color Palettes** - Easy theme switching using CSS variables
-- **Fully Responsive** - Looks great on all devices
-- **Lightweight** - No frameworks, pure HTML/CSS/JavaScript with ES6 modules
-- **MVC Architecture** - Clean separation of concerns for easy maintenance
+### Core Features
+- **🏠 Home Page** - Elegant landing page with real-time countdown timer
+- **📋 Wedding Info** - Comprehensive venue details, schedule, dress code, and FAQ
+- **🎁 Gift Registry** - Multiple payment options (PayPal, Wise, Bank Transfer, Wero)
+- **✉️ RSVP System** - Complete RSVP management with email confirmations
+- **📸 Photo Albums** - Date-based visibility (hidden until after wedding)
+- **🎨 Theme System** - 3 color palettes with persistent theme switching
+- **🌐 Multi-Language** - Internationalization support (English/French)
+- **📱 Fully Responsive** - Optimized for all devices
 
-## 📂 Project Structure (MVC Pattern)
+### RSVP & Admin Features
+- **📝 RSVP Form** - Guest-friendly form with validation
+- **💾 Data Storage** - Netlify Blobs for reliable data persistence
+- **📧 Email Confirmations** - Automated emails via SendGrid
+  - Accepted template (when admin approves)
+  - Declined template (when guest declines)
+  - Admin-declined template (with optional reason)
+- **👤 Admin Dashboard** - Complete RSVP management interface
+  - View all RSVPs with filtering and search
+  - Approve/decline RSVPs with custom messages
+  - Real-time statistics (total RSVPs, pending, approved guests count)
+  - Auto-refresh every 5 minutes
+  - Configurable rows per page (25, 50, 100)
+  - Pagination support
+
+### Technical Features
+- **🏗️ MVC Architecture** - Clean separation of concerns
+- **⚡ Serverless Functions** - Netlify Functions for backend operations
+- **🔒 Security** - Admin authentication with secret-based access
+- **📦 Modular Code** - ES6 modules with clear organization
+- **🎯 Zero Dependencies** - Pure JavaScript (except Netlify/SendGrid SDKs)
+
+---
+
+## 📂 Project Structure
 
 ```
 summer_Dream/
-├── models/                    # Data models and configuration
-│   ├── config.js             # Application configuration (payment links, dates, etc.)
-│   └── rsvp.js               # RSVP data model with validation
-├── views/                    # HTML templates (presentation layer)
-│   ├── index.html            # Home page
-│   ├── info.html             # Wedding information
-│   ├── gift.html             # Gift pot
-│   ├── rsvp.html             # RSVP form
-│   └── albums.html           # Photo albums
-├── controllers/              # Business logic and interaction handling
-│   ├── countdown.js          # Countdown timer logic
-│   ├── payment.js            # Payment button handling
-│   ├── rsvp.js               # RSVP form handling
-│   ├── albums.js             # Albums page logic
-│   └── utility.js            # Utility functions
-├── assets/                   # Static assets
-│   └── css/
-│       └── styles.css        # All styles with color palette options
-├── docs/                     # Documentation
-│   ├── DEPLOYMENT.md         # Deployment guide
-│   ├── NOTION_INTEGRATION.md # Notion setup guide
-│   └── QUICKSTART.md         # Quick start guide
-├── app.js                    # Main application entry point
-├── index.html                # Root redirector (for backwards compatibility)
-└── README.md                 # This file
+├── models/                      # Data models and configuration
+│   ├── config.js               # Application configuration
+│   └── rsvp.js                 # RSVP data model with validation
+│
+├── views/                       # HTML templates (presentation layer)
+│   ├── index.html              # Home page with countdown
+│   ├── info.html               # Wedding information
+│   ├── gift.html               # Gift registry
+│   ├── rsvp.html               # RSVP form
+│   ├── albums.html             # Photo albums
+│   └── admin_dashboard.html     # Admin management interface
+│
+├── controllers/                 # Business logic (client-side)
+│   ├── countdown.js            # Countdown timer logic
+│   ├── payment.js              # Payment button handling
+│   ├── rsvp_form.js            # RSVP form controller
+│   ├── albums.js               # Albums page logic
+│   ├── theme.js                # Theme switching
+│   ├── language.js             # Internationalization
+│   ├── info.js                 # Info page controller
+│   ├── admin.js                # Admin dashboard controller
+│   ├── utility.js              # Utility functions
+│   └── netlify-func/           # Serverless functions (backend)
+│       ├── submit-rsvp.js      # RSVP submission handler
+│       ├── get-rsvps.js        # RSVP retrieval for admin
+│       └── send-confirmation.js # Email sending handler
+│
+├── assets/                      # Static assets
+│   ├── css/
+│   │   └── styles.css          # All styles with theme variables
+│   └── images/                 # Image assets
+│
+├── docs/                        # Documentation
+│   ├── COMPLETE_SETUP.md       # Complete setup guide
+│   ├── DEPLOYMENT.md           # Deployment instructions
+│   ├── EMAIL_SYSTEM.md         # Email system documentation
+│   ├── RSVP_SYSTEM.md          # RSVP system guide
+│   └── SECURITY.md             # Security best practices
+│
+├── app.js                       # Main application entry point
+├── netlify.toml                 # Netlify configuration
+├── package.json                 # Dependencies
+└── README.md                    # This file
 ```
+
+---
 
 ## 🚀 Quick Start
 
-### 1. Customize Your Website
+### Prerequisites
+- Node.js 18+ (for local development)
+- Netlify account (for deployment)
+- SendGrid account (for email delivery)
+- Git (for version control)
 
-Edit these files to add your personal information:
+### 1. Clone and Install
 
-- **`models/config.js`** - Update wedding date, payment links, and album URLs
-- **`views/*.html`** - Update names, venue details, and content
-- **`assets/css/styles.css`** - Choose your color palette
-
-### 2. Configure Settings
-
-In `models/config.js`:
-```javascript
-// Update wedding date
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
-
-// Add payment links
-export const PAYMENT_LINKS = {
-    paypal: 'https://paypal.me/YourID',
-    wise: 'https://wise.com/pay/me/YourID',
-    wero: 'wero://pay?to=YOUR-PHONE',
-};
-
-// Update album links (after wedding)
-export const ALBUM_LINKS = {
-    ceremony: 'https://your-album-url.com',
-    reception: 'https://your-album-url.com',
-    couple: 'https://your-album-url.com',
-    guests: 'https://your-album-url.com',
-};
-```
-
-### 3. Choose Your Color Theme
-
-In `assets/css/styles.css`, uncomment one of the 3 color palettes:
-
-- **Palette 1**: Romantic Blush & Gold (default)
-- **Palette 2**: Garden Sage & Terracotta
-- **Palette 3**: Ocean Blue & Coral
-
-### 4. Deploy to GitHub Pages
-
-See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for step-by-step instructions.
-
-Quick version:
 ```bash
-git add .
-git commit -m "Customized wedding website"
-git push origin main
+# Clone the repository
+git clone <your-repo-url>
+cd summer_Dream
+
+# Install dependencies
+npm install
 ```
 
-Then enable GitHub Pages in repository Settings → Pages → Select `main` branch.
+### 2. Configure Environment Variables
 
-Your site will be live at: `https://YOUR-USERNAME.github.io/summer_Dream/`
+Create a `.env` file (see `.env.example` for template):
 
-## 🏗️ MVC Architecture Benefits
+```bash
+# SendGrid Configuration
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+
+# Admin Security
+ADMIN_SECRET=your_secure_admin_secret
+
+# Optional: For local development
+NETLIFY_SITE_ID=your_site_id
+NETLIFY_AUTH_TOKEN=your_auth_token
+```
+
+### 3. Customize Configuration
+
+Edit `models/config.js`:
+- Update wedding date and time
+- Add payment links (PayPal, Wise, Wero)
+- Configure album links (after wedding)
+- Customize theme palettes
+
+### 4. Deploy to Netlify
+
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Login to Netlify
+netlify login
+
+# Initialize and deploy
+netlify init
+netlify deploy --prod
+```
+
+Or connect your GitHub repository to Netlify for automatic deployments.
+
+### 5. Set Environment Variables in Netlify
+
+1. Go to Netlify Dashboard → Site Settings → Environment Variables
+2. Add all variables from your `.env` file
+3. Redeploy if needed
+
+---
+
+## 📖 Detailed Documentation
+
+### Setup Guides
+- **[Complete Setup Guide](docs/COMPLETE_SETUP.md)** - Step-by-step setup instructions
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Detailed deployment walkthrough
+- **[Email System Guide](docs/EMAIL_SYSTEM.md)** - SendGrid configuration and email templates
+- **[RSVP System Guide](docs/RSVP_SYSTEM.md)** - RSVP workflow and admin dashboard usage
+
+### Architecture
+- **[MVC Architecture](docs/ARCHITECTURE.md)** - Detailed architecture explanation
+- **[Security Guide](docs/SECURITY.md)** - Security best practices
+
+---
+
+## 🎯 Key Components Explained
 
 ### Models (`models/`)
-- **config.js**: Centralized configuration for easy updates
-- **rsvp.js**: Data validation and structure for RSVP submissions
+
+**config.js** - Central configuration file
+- Payment links (PayPal, Wise, Wero)
+- Wedding date and time
+- Album links (for post-wedding)
+- Theme palette definitions
+
+**rsvp.js** - RSVP data model
+- Data validation (name, email, attendance)
+- Data structure definition
+- JSON serialization for API submission
 
 ### Views (`views/`)
-- Clean HTML templates without embedded logic
-- Easy to update content and styling
-- Consistent structure across all pages
+
+All HTML templates follow a consistent structure:
+- Navigation bar with theme switcher
+- Page-specific content
+- Footer with copyright
+- Language switcher (where applicable)
 
 ### Controllers (`controllers/`)
-- Separated business logic from presentation
-- Reusable components
-- Easy to test and maintain
-- Clear responsibilities for each controller
 
-### Benefits:
-✅ **Better Organization** - Clear separation of concerns  
-✅ **Easy Maintenance** - Update configuration in one place  
-✅ **Scalability** - Add new features without touching existing code  
-✅ **Testability** - Controllers can be tested independently  
-✅ **Reusability** - Controllers can be reused across pages  
+**Client-Side Controllers:**
+- `countdown.js` - Real-time countdown timer updates
+- `payment.js` - Payment button click handlers
+- `rsvp_form.js` - RSVP form submission and validation
+- `albums.js` - Albums page date-based visibility
+- `theme.js` - Theme switching with localStorage
+- `language.js` - Internationalization handling
+- `admin.js` - Admin dashboard functionality
+- `info.js` - Info page interactions
+- `utility.js` - Shared utility functions
 
-## 🧪 Testing Locally
+**Serverless Functions (`controllers/netlify-func/`):**
+- `submit-rsvp.js` - Handles RSVP form submissions, stores in Netlify Blobs
+- `get-rsvps.js` - Retrieves all RSVPs for admin dashboard (with authentication)
+- `send-confirmation.js` - Sends email confirmations via SendGrid
 
-Before deploying, test locally using a web server:
+---
 
-```bash
-# Using Python
-python -m http.server 8000
+## 🔐 Security
 
-# Or using Node.js
-npx serve
+### Admin Authentication
+- Secret-based authentication via `X-Admin-Secret` header
+- Base64 encoding support for non-ASCII characters
+- Environment variable storage (never in code)
 
-# Visit: http://localhost:8000
+### Data Protection
+- All sensitive data in environment variables
+- No API keys in client-side code
+- HTTPS enforced by Netlify
+- Input validation and sanitization
+
+See **[Security Guide](docs/SECURITY.md)** for detailed information.
+
+---
+
+## 📧 Email System
+
+### Email Templates
+
+1. **Accepted Template** - Sent when admin approves RSVP
+   - Includes RSVP details
+   - Wedding information
+   - Optional admin personal message
+   - Venue limitation notice (children under 13)
+
+2. **Declined Template** - Sent when guest declines
+   - Thank you message
+   - Guest's original message (if provided)
+
+3. **Admin-Declined Template** - Sent when admin declines a guest who wanted to attend
+   - Explains the situation
+   - Optional reason from admin
+   - Apologetic tone
+
+### Email Flow
+
+```
+Guest submits RSVP
+    ↓
+Stored in Netlify Blobs (status: pending)
+    ↓
+Admin reviews in dashboard
+    ↓
+Admin approves/declines
+    ↓
+Email sent via SendGrid
+    ↓
+RSVP status updated in storage
 ```
 
-**Note**: Due to ES6 modules, you must use a web server (not just opening HTML files directly).
+See **[Email System Guide](docs/EMAIL_SYSTEM.md)** for detailed configuration.
 
-## 📱 Generate QR Code
+---
 
-After deployment, create a QR code for your website:
+## 👤 Admin Dashboard
 
-1. Visit [qr-code-generator.com](https://www.qr-code-generator.com/)
-2. Enter your GitHub Pages URL
-3. Download and add to invitations!
+### Features
+- **Authentication** - Secret-based login
+- **RSVP Management** - View, approve, decline RSVPs
+- **Filtering** - Filter by status, attendance, search by name/email
+- **Statistics** - Real-time counts:
+  - Total RSVPs
+  - Pending reviews
+  - Approved attending guests (total count)
+- **Pagination** - Configurable rows per page (25, 50, 100)
+- **Auto-Refresh** - Updates every 5 minutes automatically
+- **Custom Messages** - Add personal messages when approving/declining
 
-## 🔧 Optional: Notion Integration
+### Access
+Navigate to `/views/admin_dashboard.html` or use the admin button in navigation.
 
-To receive RSVP submissions in Notion, see **[docs/NOTION_INTEGRATION.md](docs/NOTION_INTEGRATION.md)** for detailed setup instructions.
+---
 
-Alternatively, use Google Forms for a simpler solution (instructions included in Notion guide).
+## 🎨 Customization
 
-## 💰 Cost
+### Theme Customization
 
-**$0/year** - Completely free when hosted on GitHub Pages!
+Edit `models/config.js` to modify theme palettes:
 
-Optional costs:
-- Custom domain: ~$10-15/year (optional)
-- Nothing else needed!
-
-## 🎨 Customization Tips
-
-### Update Payment Links
-
-In `models/config.js`:
 ```javascript
-export const PAYMENT_LINKS = {
-    paypal: 'https://paypal.me/YourID',
-    wise: 'https://wise.com/pay/me/YourID',
-    wero: 'wero://pay?to=YOUR-PHONE',
+export const THEME_PALETTES = {
+    palette1: {
+        primary: '#d4a5a5',
+        secondary: '#c9a86a',
+        // ... other colors
+    }
 };
 ```
 
-### Update Bank Details
+### Content Customization
 
-In `views/gift.html`, replace placeholders:
-```html
-[Account Holder Name]
-[IBAN Number]
-[BIC/SWIFT Code]
-[Wero ID/Phone Number]
+- **Wedding Info**: Edit `views/info.html`
+- **Gift Registry**: Edit `views/gift.html`
+- **RSVP Form**: Edit `views/rsvp.html`
+- **Home Page**: Edit `views/index.html`
+
+### Styling
+
+All styles in `assets/css/styles.css` use CSS variables for easy theming.
+
+---
+
+## 🧪 Testing
+
+### Local Development
+
+```bash
+# Start Netlify Dev (recommended)
+netlify dev
+
+# Or use a simple HTTP server
+python -m http.server 8000
+# Visit http://localhost:8000
 ```
 
-### Change Wedding Date
+**Important:** ES6 modules require a web server (not `file://` protocol).
 
-In `models/config.js`:
-```javascript
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
-```
+### Testing Checklist
 
-## 📱 Mobile Friendly
+- [ ] Countdown timer displays correctly
+- [ ] RSVP form validation works
+- [ ] RSVP submission succeeds
+- [ ] Admin dashboard loads
+- [ ] Admin can approve/decline RSVPs
+- [ ] Email confirmations are sent
+- [ ] Theme switching works
+- [ ] Language switching works
+- [ ] All pages are responsive
+- [ ] Payment buttons work
 
-The website is fully responsive and looks great on:
-- 📱 Smartphones
-- 📱 Tablets
-- 💻 Laptops
-- 🖥️ Desktop computers
+---
 
-## 🌟 Key Features Explained
+## 📊 Production Checklist
 
-### Countdown Timer
-- Updates in real-time every second
-- Shows days, hours, minutes, seconds until wedding
-- Automatically changes to "We're Married! 🎉" after June 12, 2026
-- Managed by `controllers/countdown.js`
-
-### Albums Page Logic
-- **Before June 12, 2026**: Shows "Coming Soon" message with countdown
-- **After June 12, 2026**: Displays photo albums with view/download links
-- Edit album links in `models/config.js` after wedding
-- Managed by `controllers/albums.js`
-
-### RSVP Form
-- Shows/hides fields based on attendance selection
-- Client-side validation using `models/rsvp.js`
-- Optional Notion integration for data storage
-- Managed by `controllers/rsvp.js`
-
-### Gift Pot
-- Multiple payment options
-- Direct bank transfer details
-- Wishlist section
-- No transaction fees (direct to you)
-- Managed by `controllers/payment.js`
-
-## 🔒 Security
-
-- No sensitive data in code
-- Payment links are just URLs (no API keys)
-- Notion API keys should be in serverless functions (see docs/NOTION_INTEGRATION.md)
-- HTTPS automatically enabled by GitHub Pages
-
-## 📊 Analytics (Optional)
-
-Add Google Analytics to track visitors (free):
-
-1. Get tracking ID from [analytics.google.com](https://analytics.google.com)
-2. Add code to each HTML file (instructions in docs/DEPLOYMENT.md)
-
-## 🆘 Support & Troubleshooting
-
-Common issues and solutions in **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
-
-## 📝 To-Do Before Going Live
+Before going live:
 
 - [ ] Update wedding date in `models/config.js`
 - [ ] Add payment links in `models/config.js`
 - [ ] Update names and content in `views/*.html`
-- [ ] Add venue details in `views/info.html`
-- [ ] Add bank details in `views/gift.html`
-- [ ] Choose color palette in `assets/css/styles.css`
-- [ ] Test all pages locally (use a web server!)
-- [ ] Deploy to GitHub Pages
-- [ ] Test live website on mobile and desktop
-- [ ] Generate QR code
-- [ ] Set up Notion integration (optional)
-- [ ] Share with guests!
+- [ ] Configure SendGrid API key
+- [ ] Set secure `ADMIN_SECRET`
+- [ ] Test RSVP submission flow
+- [ ] Test admin dashboard
+- [ ] Test email delivery
+- [ ] Verify all environment variables in Netlify
+- [ ] Test on mobile devices
+- [ ] Generate QR code for invitations
+- [ ] Test language switching
+- [ ] Verify theme switching works
 
-## 🎊 After the Wedding
+---
 
-1. Upload photos to Lightroom/Google Photos/Dropbox
-2. Update album links in `models/config.js` (ALBUM_LINKS)
-3. Test that albums page displays correctly
-4. Let guests know photos are available!
+## 🐛 Troubleshooting
 
-## 🔄 Migrating from Old Structure
+### Common Issues
 
-If you're updating from the old flat structure:
+**RSVP submissions fail:**
+- Check Netlify function logs
+- Verify Netlify Blobs is enabled
+- Check environment variables
 
-1. Your old `script.js` has been split into modular controllers
-2. Configuration is now in `models/config.js`
-3. HTML files are in `views/` directory
-4. CSS is in `assets/css/` directory
-5. Documentation is in `docs/` directory
-6. The root `index.html` redirects to `views/index.html` for backwards compatibility
+**Emails not sending:**
+- Verify SendGrid API key
+- Check SendGrid account status
+- Review function logs for errors
 
-All functionality remains the same, just better organized!
+**Admin dashboard not loading:**
+- Verify `ADMIN_SECRET` is set
+- Check browser console for errors
+- Ensure admin secret matches
+
+**Theme not persisting:**
+- Check browser localStorage support
+- Clear cache and try again
+
+See documentation in `docs/` for more troubleshooting help.
+
+---
+
+## 📝 Version History
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+
+**Current Version:** 2.1.0 (Production Release)
+
+### Recent Updates
+- Complete RSVP system with email confirmations
+- Admin dashboard with auto-refresh
+- Multi-language support
+- Enhanced email templates
+- Children under 13 limitation notice
+- Configurable rows per page in admin dashboard
+
+---
+
+## 🤝 Contributing
+
+This is a personal wedding website project. For questions or suggestions, please open an issue.
+
+---
 
 ## 📄 License
 
-This is your personal wedding website. Feel free to modify and use as you wish!
+This project is for personal use. Feel free to use and modify for your own wedding website.
+
+---
 
 ## 🙏 Credits
 
-Made with ❤️ for Audrey & Josue-Daniel 2026  
-Restructured with MVC pattern for better maintainability
+Made with ❤️ for J-D & A-N's special day  
+Built with modern web technologies and best practices
 
 ---
 
-**Questions?** Check out:
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment instructions
-- [docs/NOTION_INTEGRATION.md](docs/NOTION_INTEGRATION.md) - RSVP setup guide
-- [docs/QUICKSTART.md](docs/QUICKSTART.md) - Quick start guide
+## 📞 Support
 
-**Ready to deploy?** Follow the guide in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+For detailed guides and documentation:
+- [Complete Setup Guide](docs/COMPLETE_SETUP.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Email System Guide](docs/EMAIL_SYSTEM.md)
+- [RSVP System Guide](docs/RSVP_SYSTEM.md)
+- [Security Guide](docs/SECURITY.md)
 
 ---
 
-*Congratulations on your upcoming wedding! 🎉💍*
+**Congratulations on your upcoming wedding! 🎉💍**
+
+*This is a production-ready release. All features are fully implemented and tested.*

@@ -1,25 +1,66 @@
 // ===========================
 // NETLIFY FUNCTION: RSVP Submission
 // File: controllers/netlify-func/submit-rsvp.js
-// Stores RSVPs in Netlify Blob Storage
+//
+// PURPOSE:
+// This serverless function handles RSVP form submissions from guests.
+// It validates the data, stores it in Netlify Blobs, and returns a response.
+//
+// WORKFLOW:
+// 1. Guest fills out RSVP form on the website
+// 2. RSVPController (client-side) validates data and calls this function
+// 3. Function validates data again (server-side validation)
+// 4. Function generates unique RSVP ID
+// 5. Function stores RSVP in Netlify Blobs with status "pending"
+// 6. Function returns success response with RSVP ID
+// 7. Admin can later review and approve/decline in admin dashboard
+//
+// SECURITY:
+// - Server-side validation (never trust client-side only)
+// - Input sanitization
+// - No authentication required (public endpoint for guests)
+// - Rate limiting handled by Netlify
 // ===========================
 
 const { getStore } = require('@netlify/blobs');
 
-// Validate RSVP data
+/**
+ * Validate RSVP Data
+ * 
+ * This function performs server-side validation of RSVP data. Even though
+ * client-side validation exists, we always validate on the server for security.
+ * 
+ * Validation rules:
+ * - Name: Required, non-empty after trimming whitespace
+ * - Email: Required, must match valid email format (user@domain.com)
+ * - Attending: Required, must be either 'yes' or 'no'
+ * 
+ * Other fields (phone, guests, dietary, message) are optional.
+ * 
+ * @param {Object} data - RSVP form data
+ * @returns {Object} Validation result
+ *   - isValid: boolean - Whether all validations passed
+ *   - errors: string[] - Array of error messages (empty if valid)
+ */
 function validateRSVPData(data) {
   const errors = [];
 
+  // Name validation: Required field
   if (!data.name || data.name.trim() === '') {
     errors.push('Name is required');
   }
 
+  // Email validation: Required and must be valid format
   if (!data.email || data.email.trim() === '') {
     errors.push('Email is required');
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    // Email regex pattern: user@domain.com
+    // Ensures: at least one char before @, @ symbol, at least one char after @,
+    // dot, and at least one char after dot
     errors.push('Email is invalid');
   }
 
+  // Attendance validation: Required and must be 'yes' or 'no'
   if (!data.attending || !['yes', 'no'].includes(data.attending)) {
     errors.push('Attendance selection is required');
   }
@@ -30,7 +71,26 @@ function validateRSVPData(data) {
   };
 }
 
-// Generate unique ID for RSVP
+/**
+ * Generate Unique RSVP ID
+ * 
+ * Creates a unique identifier for each RSVP submission. The ID format is:
+ *   rsvp_[timestamp]_[random_string]
+ * 
+ * Example: rsvp_1704067200000_k3j9x2m8p
+ * 
+ * Components:
+ * - "rsvp_" prefix for easy identification
+ * - Timestamp (milliseconds since epoch) for chronological ordering
+ * - Random string (base36, 9 chars) for uniqueness
+ * 
+ * This ensures:
+ * - Uniqueness: Very low probability of collisions
+ * - Sortability: Can be sorted by timestamp
+ * - Readability: Human-readable format
+ * 
+ * @returns {string} Unique RSVP identifier
+ */
 function generateId() {
   return `rsvp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }

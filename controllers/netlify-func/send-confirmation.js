@@ -1,17 +1,62 @@
 // ===========================
 // NETLIFY FUNCTION: Send Confirmation Email (SendGrid)
 // File: controllers/netlify-func/send-confirmation.js
-// Sends confirmation emails via SendGrid and updates RSVP status
+// 
+// PURPOSE:
+// This serverless function handles sending email confirmations to guests when
+// an admin approves or declines their RSVP. It integrates with SendGrid for
+// email delivery and Netlify Blobs for data storage.
+//
+// WORKFLOW:
+// 1. Admin clicks "Approve" or "Decline" in admin dashboard
+// 2. Admin dashboard calls this function with rsvpId and status
+// 3. Function authenticates admin using X-Admin-Secret header
+// 4. Function retrieves RSVP data from Netlify Blobs
+// 5. Function determines which email template to use:
+//    - Approved: Accepted template (with optional admin message)
+//    - Declined + guest wanted to attend: Admin-declined template (with reason)
+//    - Declined + guest didn't want to attend: User-declined template
+// 6. Function sends email via SendGrid
+// 7. Function updates RSVP status in storage
+// 8. Function returns success/error response
+//
+// SECURITY:
+// - Admin authentication via X-Admin-Secret header
+// - Base64 encoding support for non-ASCII secrets
+// - HTML escaping in email templates to prevent XSS
+// - Environment variables for sensitive data (API keys, secrets)
 // ===========================
 
 const sgMail = require('@sendgrid/mail');
 const { getStore } = require('@netlify/blobs');
 
+/**
+ * Netlify Function Handler
+ * 
+ * This is the main entry point for the serverless function. It's called by
+ * Netlify when an HTTP request is made to the function endpoint.
+ * 
+ * @param {Object} event - HTTP request event object
+ *   - event.httpMethod: HTTP method (GET, POST, etc.)
+ *   - event.body: Request body (JSON string)
+ *   - event.headers: Request headers object
+ * @param {Object} context - Netlify execution context
+ *   - context.site: Site information (in production)
+ *   - context.site.id: Netlify site ID
+ *   - context.site.apiToken: API token for Netlify services
+ * 
+ * @returns {Object} HTTP response
+ *   - statusCode: HTTP status code (200, 400, 401, 404, 500)
+ *   - body: JSON string with response data
+ */
 exports.handler = async (event, context) => {
+  // Generate unique request ID for logging and debugging
+  // This helps track requests across multiple log entries
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   console.log(`[${requestId}] 📧 Send confirmation request received`);
 
-  // Only allow POST requests
+  // Security: Only allow POST requests
+  // GET requests could expose sensitive information or allow CSRF attacks
   if (event.httpMethod !== 'POST') {
     console.warn(`[${requestId}] ⚠️ Invalid HTTP method: ${event.httpMethod}`);
     return {
@@ -20,7 +65,12 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Get environment variables
+  // ============================================
+  // ENVIRONMENT VARIABLES
+  // ============================================
+  // These are set in Netlify Dashboard → Site Settings → Environment Variables
+  // Never hardcode these values in the code!
+  
   const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
   const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@yourwedding.com';
   const ADMIN_SECRET = process.env.ADMIN_SECRET;
@@ -48,11 +98,18 @@ exports.handler = async (event, context) => {
       adminMessage: data.adminMessage ? '[provided]' : 'none'
     });
 
-    // Verify admin secret from header
+    // ============================================
+    // ADMIN AUTHENTICATION
+    // ============================================
+    // The admin secret is sent in the X-Admin-Secret header by the admin dashboard.
+    // This prevents unauthorized access to the email sending functionality.
+    
     let secret = event.headers['x-admin-secret'];
     
-    // Decode base64-encoded secret (handles non-ASCII characters)
-    // Node.js doesn't have atob - use Buffer instead
+    // Base64 decoding support:
+    // The admin dashboard encodes the secret in base64 to handle non-ASCII characters.
+    // We decode it here to compare with the plain text ADMIN_SECRET.
+    // Node.js doesn't have atob() like browsers, so we use Buffer instead.
     const originalSecret = secret;
     try {
       if (secret) {
@@ -93,16 +150,32 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get RSVP data from storage
+    // ============================================
+    // NETLIFY BLOBS STORAGE INITIALIZATION
+    // ============================================
+    // Netlify Blobs is a key-value storage service provided by Netlify.
+    // We use it to store RSVP data persistently.
+    //
+    // Initialization strategy:
+    // 1. First, try auto-detection (works in production Netlify)
+    //    - Netlify automatically provides execution context
+    //    - No configuration needed
+    // 2. If that fails, try explicit env vars (for local development)
+    //    - Requires NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN
+    //    - Set these in .env file for local testing
+    
     console.log(`[${requestId}] 💾 Fetching RSVP from storage...`);
     let store;
     try {
+      // Attempt 1: Auto-detection (production mode)
       // In production, Netlify automatically provides the execution context
-      // Try auto-detection first (works in production Netlify)
+      // This is the simplest and most secure method
       store = getStore('rsvps');
       console.log(`[${requestId}] ✅ Blob store initialized (auto-detect - production mode)`);
     } catch (autoDetectError) {
-      // If auto-detection fails, try with explicit env vars (for local dev)
+      // Attempt 2: Explicit configuration (local development mode)
+      // If auto-detection fails, we might be in local development
+      // In that case, we need to provide site ID and auth token explicitly
       if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
         store = getStore({
           name: 'rsvps',
@@ -111,7 +184,8 @@ exports.handler = async (event, context) => {
         });
         console.log(`[${requestId}] ✅ Blob store initialized with env vars (local dev mode)`);
       } else {
-        // Re-throw the original error if no fallback available
+        // If both methods fail, we can't proceed
+        // Re-throw the error so it's caught by the outer try-catch
         throw autoDetectError;
       }
     }
@@ -139,19 +213,36 @@ exports.handler = async (event, context) => {
     // Initialize SendGrid
     sgMail.setApiKey(SENDGRID_API_KEY);
 
-    // Email template selection logic:
-    // - If approved: send accepted template
-    // - If declined AND user wanted to attend: send admin-declined template (with reason)
-    // - If declined AND user didn't want to attend: send user-declined template (confirmation of their choice)
+    // ============================================
+    // EMAIL TEMPLATE SELECTION LOGIC
+    // ============================================
+    // The email template depends on two factors:
+    // 1. The admin's action (approved or declined)
+    // 2. The guest's original attendance response
+    //
+    // Three scenarios:
+    // 1. Admin approves → Send accepted template (celebratory, with wedding details)
+    // 2. Admin declines + guest wanted to attend → Send admin-declined template
+    //    (apologetic, with optional reason from admin)
+    // 3. Admin declines + guest didn't want to attend → Send user-declined template
+    //    (thank you message, confirming their original choice)
+    //
+    // This distinction is important for the guest experience:
+    // - Scenario 2 requires a more sensitive approach (admin is declining their request)
+    // - Scenario 3 is just confirming what the guest already decided
+    
     let emailTemplate;
     if (newStatus === 'approved') {
-      const adminMessage = data.adminMessage || '';
+      // Admin approved the RSVP
+      const adminMessage = data.adminMessage || ''; // Optional personal message from admin
       emailTemplate = getAcceptedTemplate(rsvp, adminMessage);
     } else if (rsvp.attending === 'yes') {
-      // User wanted to attend but admin declined
+      // Admin declined, but guest originally wanted to attend
+      // This requires a more sensitive email template
       emailTemplate = getAdminDeclinedTemplate(rsvp, declineReason);
     } else {
-      // User didn't want to attend, admin confirming their choice
+      // Admin declined, and guest originally didn't want to attend
+      // This is just confirming their original choice
       emailTemplate = getDeclinedTemplate(rsvp);
     }
 
@@ -202,7 +293,27 @@ exports.handler = async (event, context) => {
   }
 };
 
-// Helper function to escape HTML to prevent XSS
+/**
+ * HTML Escaping Helper Function
+ * 
+ * SECURITY: This function prevents XSS (Cross-Site Scripting) attacks by escaping
+ * HTML special characters. Any user-provided content (names, messages, reasons)
+ * must be escaped before being inserted into HTML templates.
+ * 
+ * Example:
+ *   Input:  "<script>alert('XSS')</script>"
+ *   Output: "&lt;script&gt;alert(&#039;XSS&#039;)&lt;/script&gt;"
+ * 
+ * Characters escaped:
+ *   & → &amp;   (ampersand)
+ *   < → &lt;    (less than)
+ *   > → &gt;    (greater than)
+ *   " → &quot;  (double quote)
+ *   ' → &#039;  (single quote)
+ * 
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text safe for HTML insertion
+ */
 function escapeHtml(text) {
   if (!text) return '';
   const map = {
