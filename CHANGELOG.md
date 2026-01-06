@@ -7,7 +7,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.1.0] - December 11, 2025
+## [2.1.0] - Production Release - January 2026
+
+### 🎉 Production Release
+
+This is the final production release with all features fully implemented, tested, and documented.
+
+### Added
+
+#### Complete RSVP Management System
+- **Netlify Blobs Storage** - Reliable serverless data storage for RSVPs
+- **Email Confirmation System** - Automated email delivery via SendGrid
+  - Accepted email template (when admin approves)
+  - Declined email template (when guest declines)
+  - Admin-declined email template (with optional reason field)
+  - Admin personal message support in accepted emails
+  - Children under 13 limitation notice in RSVP form and emails
+- **Admin Dashboard** - Complete RSVP management interface
+  - Secure authentication with secret-based access
+  - View all RSVPs with real-time statistics
+  - Filter by status (pending, approved, declined)
+  - Filter by attendance (yes, no)
+  - Search by name or email
+  - Sort by any column (name, email, status, date)
+  - Approve RSVPs with optional personal message
+  - Decline RSVPs with optional reason (for guests who wanted to attend)
+  - Auto-refresh every 5 minutes during active session
+  - Configurable rows per page (25, 50, 100)
+  - Pagination support
+  - Statistics display:
+    - Total RSVPs
+    - Pending reviews
+    - Approved attending guests (total count)
+
+#### Enhanced Email Templates
+- **Accepted Template** - Beautiful HTML email with:
+  - RSVP details summary
+  - Wedding information
+  - Optional admin personal message
+  - Venue limitation notice
+  - Wedding schedule
+- **Declined Template** - Thank you message for guests who decline
+- **Admin-Declined Template** - Professional message with optional reason when admin declines a guest
+
+#### Multi-Language Support
+- **Internationalization** - English and French language support
+- **Language Controller** - Dynamic language switching
+- **Persistent Language Choice** - Stored in localStorage
+
+#### Theme System
+- **3 Color Palettes** - Pre-configured beautiful themes
+- **Theme Switcher** - One-click theme switching
+- **Persistent Themes** - Theme choice saved in localStorage
+
+#### Serverless Functions
+- **submit-rsvp.js** - Handles RSVP form submissions
+  - Validates input data
+  - Stores in Netlify Blobs
+  - Returns success/error responses
+  - Comprehensive error logging
+- **get-rsvps.js** - Retrieves RSVPs for admin dashboard
+  - Admin authentication required
+  - Returns all RSVPs with statistics
+  - Base64 secret decoding support
+- **send-confirmation.js** - Sends email confirmations
+  - SendGrid integration
+  - Template selection based on admin action
+  - Distinguishes between admin-declined and guest-declined
+  - HTML escaping for security
+  - Comprehensive error handling
+
+### Changed
+
+#### Architecture Improvements
+- **MVC Pattern** - Clean separation of concerns throughout
+- **Modular Controllers** - Each controller has single responsibility
+- **ES6 Modules** - Modern JavaScript with imports/exports
+- **Serverless Backend** - Netlify Functions for all backend operations
+
+#### Code Quality
+- **Inline Comments** - Comprehensive comments throughout codebase
+- **Error Handling** - Robust error handling in all functions
+- **Input Validation** - Client and server-side validation
+- **Security** - HTML escaping, authentication, environment variables
+
+#### Documentation
+- **Production README** - Comprehensive production documentation
+- **Architecture Guide** - Detailed MVC architecture explanation
+- **Setup Guides** - Step-by-step setup instructions
+- **Security Guide** - Security best practices
+- **Email System Guide** - Complete email configuration guide
+
+### Fixed
+
+- Fixed duplicate code blocks in send-confirmation.js
+- Fixed email template selection to use admin action instead of guest response
+- Fixed duplicate store declaration in submit-rsvp.js
+- Fixed syntax errors causing 502 errors
+- Improved error logging in Netlify functions
+
+### Security
+
+- Admin authentication with secret-based access
+- Base64 encoding support for non-ASCII secrets
+- HTML escaping in email templates
+- Environment variable storage for sensitive data
+- Input validation and sanitization
+
+---
+
+## [2.0.0] - December 11, 2025
 
 ### Added
 

@@ -45,13 +45,17 @@
                     <h3>Total RSVPs</h3>
                     <div class="number" id="stats-total">0</div>
                 </div>
-                <div class="stat-card">
+                <div display: none; class="stat-card">
                     <h3>Attending</h3>
                     <div class="number" id="stats-attending">0</div>
                 </div>
                 <div class="stat-card">
                     <h3>Pending Review</h3>
                     <div class="number" id="stats-pending">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Approved Attending Guests</h3>
+                    <div class="number" id="stats-approved-guests">0</div>
                 </div>
             </div>
 
@@ -68,6 +72,11 @@
                     <option value="no">Not Attending</option>
                 </select>
                 <input type="text" id="search-input" placeholder="Search by name or email">
+                <select id="rows-per-page" style="margin-left: auto;">
+                    <option value="25" selected>25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                </select>
             </div>
 
             <div id="rsvp-table" class="rsvp-list">
