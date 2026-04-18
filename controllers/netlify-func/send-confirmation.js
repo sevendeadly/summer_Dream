@@ -212,6 +212,7 @@ exports.handler = async (event, context) => {
 
     // Initialize Brevo transactional email API client
     const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
+    console.log(` ✅ Brevo client initialized`);
     brevoClient.setApiKey(
       SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
       BREVO_API_KEY
@@ -404,12 +405,12 @@ function getAcceptedTemplate(data, adminMessage = '') {
             
             <h3 style="color: #d4a5a5;">What to Expect</h3>
             <ul>
-              <li>2:00 PM - Guest Arrival</li>
-              <li>2:30 PM - Welcome Drinks</li>
-              <li>3:30 PM - Religious Ceremony Begins</li>
-              <li>4:30 PM - Cocktail Hour</li>
-              <li>7:30 PM - Reception & Dinner</li>
-              <li>10:00 PM - Last Dance</li>
+              <li> Guest Arrival</li>
+              <li> Welcome Drinks</li>
+              <li> Religious Ceremony Begins</li>
+              <li> Cocktail Hour</li>
+              <li> Reception & Dinner</li>
+              <li> Last Dance</li>
             </ul>
             
             <p style="margin-top: 30px;">If you have any questions or need to update your RSVP, please reply to this email or visit our website.</p>
