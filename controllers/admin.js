@@ -34,6 +34,7 @@ export class AdminController {
     // Initialize admin dashboard
     init() {
         if (!this.loginSection) return; // Not on admin page
+        window.adminController = this;
 
         this.setupEventListeners();
         
@@ -81,6 +82,14 @@ export class AdminController {
             this.rowsPerPage.addEventListener('change', () => this.handleRowsPerPageChange());
             // Set default value
             this.rowsPerPage.value = this.itemsPerPage.toString();
+        }
+
+        if (this.rsvpTable) {
+            this.rsvpTable.addEventListener('click', (event) => this.handleTableClick(event));
+        }
+
+        if (this.paginationControls) {
+            this.paginationControls.addEventListener('click', (event) => this.handlePaginationClick(event));
         }
     }
 
@@ -197,7 +206,7 @@ export class AdminController {
                     <div style="padding: 40px; text-align: center; color: #dc3545;">
                         <p><strong>Error loading RSVPs</strong></p>
                         <p>${error.message}</p>
-                        <button onclick="adminController.loadRSVPs()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Retry</button>
+                        <button data-action="retry-load" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Retry</button>
                     </div>
                 `;
             }
@@ -251,6 +260,37 @@ export class AdminController {
         this.displayRSVPs();
     }
 
+    async handleTableClick(event) {
+        const actionButton = event.target.closest('button[data-action]');
+        if (actionButton) {
+            const { action, rsvpId } = actionButton.dataset;
+            if (action === 'retry-load') {
+                await this.loadRSVPs();
+                return;
+            }
+
+            if (!rsvpId) return;
+            if (action === 'approve') await this.approveRSVP(rsvpId);
+            if (action === 'decline') await this.declineRSVP(rsvpId);
+            if (action === 'details') this.viewDetails(rsvpId);
+            if (action === 'delete') await this.deleteRSVP(rsvpId);
+            return;
+        }
+
+        const sortHeader = event.target.closest('th[data-sort]');
+        if (sortHeader) {
+            this.sortBy(sortHeader.dataset.sort);
+        }
+    }
+
+    handlePaginationClick(event) {
+        const pageButton = event.target.closest('button[data-page-action]');
+        if (!pageButton) return;
+
+        if (pageButton.dataset.pageAction === 'prev') this.previousPage();
+        if (pageButton.dataset.pageAction === 'next') this.nextPage();
+    }
+
     handleRowsPerPageChange() {
         const newRowsPerPage = parseInt(this.rowsPerPage.value) || 25;
         this.itemsPerPage = newRowsPerPage;
@@ -279,11 +319,11 @@ export class AdminController {
 
         let html = '<table class="rsvp-table">';
         html += '<thead><tr>';
-        html += '<th onclick="adminController.sortBy(\'name\')" style="cursor: pointer;">Name ⇅</th>';
-        html += '<th onclick="adminController.sortBy(\'email\')" style="cursor: pointer;">Email ⇅</th>';
-        html += '<th onclick="adminController.sortBy(\'attending\')" style="cursor: pointer;">Attending ⇅</th>';
+        html += '<th data-sort="name" style="cursor: pointer;">Name ⇅</th>';
+        html += '<th data-sort="email" style="cursor: pointer;">Email ⇅</th>';
+        html += '<th data-sort="attending" style="cursor: pointer;">Attending ⇅</th>';
         html += '<th>Guests</th>';
-        html += '<th onclick="adminController.sortBy(\'status\')" style="cursor: pointer;">Status ⇅</th>';
+        html += '<th data-sort="status" style="cursor: pointer;">Status ⇅</th>';
         html += '<th>Actions</th>';
         html += '</tr></thead><tbody>';
 
@@ -299,9 +339,10 @@ export class AdminController {
                 <td>${rsvp.guests || 1}</td>
                 <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
                 <td class="actions">
-                    ${rsvp.status !== 'approved' ? `<button onclick="adminController.approveRSVP('${rsvp.id}')">Approve</button>` : ''}
-                    ${rsvp.status !== 'declined' ? `<button onclick="adminController.declineRSVP('${rsvp.id}')">Decline</button>` : ''}
-                    <button onclick="adminController.viewDetails('${rsvp.id}')">Details</button>
+                    ${rsvp.status !== 'approved' ? `<button data-action="approve" data-rsvp-id="${rsvp.id}">Approve</button>` : ''}
+                    ${rsvp.status !== 'declined' ? `<button data-action="decline" data-rsvp-id="${rsvp.id}">Decline</button>` : ''}
+                    <button data-action="details" data-rsvp-id="${rsvp.id}">Details</button>
+                    <button data-action="delete" data-rsvp-id="${rsvp.id}" style="background:#dc3545;color:#fff;">Delete</button>
                 </td>
             </tr>`;
         });
@@ -448,6 +489,43 @@ export class AdminController {
         }
     }
 
+    async deleteRSVP(rsvpId) {
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            alert('RSVP not found');
+            return;
+        }
+
+        const shouldDelete = confirm(
+            `Delete RSVP for ${rsvp.name} (${rsvp.email})?\n\n` +
+            'This will permanently remove the RSVP from storage.'
+        );
+        if (!shouldDelete) return;
+
+        try {
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            const response = await fetch('/.netlify/functions/delete-rsvp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': encodedSecret
+                },
+                body: JSON.stringify({ rsvpId })
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            alert('🗑️ RSVP deleted successfully');
+            await this.loadRSVPs();
+        } catch (error) {
+            console.error('❌ Error deleting RSVP:', error);
+            alert(`Failed to delete RSVP: ${error.message}`);
+        }
+    }
+
     viewDetails(rsvpId) {
         const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
         if (!rsvp) return;
@@ -487,14 +565,14 @@ export class AdminController {
         
         if (!this.paginationControls) return;
 
-        let html = `Page ${this.currentPage} of ${totalPages} | `;
+        let html = `Page ${this.currentPage} of ${totalPages || 1} | `;
 
         if (this.currentPage > 1) {
-            html += `<button onclick="adminController.previousPage()">← Previous</button> `;
+            html += '<button data-page-action="prev">← Previous</button> ';
         }
 
         if (this.currentPage < totalPages) {
-            html += `<button onclick="adminController.nextPage()">Next →</button>`;
+            html += '<button data-page-action="next">Next →</button>';
         }
 
         this.paginationControls.innerHTML = html;
@@ -541,18 +619,15 @@ export class AdminController {
     }
 }
 
-// Global instance for HTML onclick handlers
-let adminController;
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    adminController = new AdminController();
+    const adminController = new AdminController();
     adminController.init();
 });
 
 // Cleanup auto-refresh when page is unloaded
 window.addEventListener('beforeunload', function() {
-    if (adminController) {
-        adminController.stopAutoRefresh();
+    if (window.adminController) {
+        window.adminController.stopAutoRefresh();
     }
 });
