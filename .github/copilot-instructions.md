@@ -2,9 +2,9 @@
 
 ## 🎯 Project Overview
 
-A lightweight, production-ready wedding website (June 12, 2026) using **MVC architecture with Netlify serverless backend**. Current version is a multi-page vanilla JS app that uses Netlify Blob Storage for RSVPs and serverless functions for email confirmations via SendGrid.
+A lightweight, production-ready wedding website (June 12, 2026) using **MVC architecture with Netlify serverless backend**. Current version is a multi-page vanilla JS app that uses Netlify Blob Storage for RSVPs and serverless functions for email confirmations via Brevo.
 
-**Key business logic:** Guests fill RSVP → Netlify function stores in Blob Storage → Admin reviews → Sends confirmation email via SendGrid.
+**Key business logic:** Guests fill RSVP → Netlify function stores in Blob Storage → Admin reviews → Sends confirmation email via Brevo.
 
 ---
 
@@ -28,7 +28,7 @@ Client Form Submit → Netlify Function (controllers/netlify-func/submit-rsvp.js
                    → Netlify Blob Storage (stores RSVP)
                    
 Admin reviews RSVP → Approve button → Netlify Function (send-confirmation.js)
-                   → SendGrid API sends email confirmation
+                   → Brevo API sends email confirmation
                    → Updates RSVP status to "approved" or "declined"
 
 Admin Dashboard ← Get RSVPs: get-rsvps.js (auth via X-Admin-Secret header)
@@ -168,7 +168,7 @@ export class FeatureController {
 
 - **Setup & Deployment:** `docs/COMPLETE_SETUP.md` (all env vars, functions, deployment)
 - **RSVP System:** `docs/RSVP_SYSTEM.md` (Netlify Blob Storage, admin dashboard)
-- **Email System:** `docs/EMAIL_SYSTEM.md` (SendGrid email configuration)
+- **Email System:** `docs/EMAIL_SYSTEM.md` (Brevo email configuration)
 - **Security:** `docs/SECURITY.md` (API key protection, HTTPS, validation)
 - **Deployment:** `docs/DEPLOYMENT.md` (GitHub → Netlify process)
 - **Version History:** `CHANGELOG.md` (features per version)
@@ -188,41 +188,41 @@ export class FeatureController {
 
 ---
 
-## 📧 Email System Configuration (SendGrid Free Tier)
+## 📧 Email System Configuration (Brevo Free Tier)
 
-**Important:** This project uses **SendGrid API**, NOT SMTP Gmail.
+**Important:** This project uses the **Brevo Transactional Email API**, NOT SMTP Gmail.
 
 ### Environment Variables Structure
 ```bash
-SENDGRID_API_KEY=SG.xxxxx...              # API key only
-SENDGRID_FROM_EMAIL=noreply@yourwedding.com  # Verified sender
+BREVO_API_KEY=xkeysib-xxxxx...              # API key only
+BREVO_FROM_EMAIL=noreply@yourwedding.com    # Verified sender
 ADMIN_EMAIL=your-email@example.com        # Where admin notifications go
 ADMIN_SECRET=strong-password              # Admin dashboard auth
 ```
 
 ### Key Difference from Traditional SMTP
 - ❌ NO `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`
-- ✅ YES `SENDGRID_API_KEY` (API token for authentication)
-- ✅ YES `SENDGRID_FROM_EMAIL` (verified in SendGrid dashboard)
+- ✅ YES `BREVO_API_KEY` (API token for authentication)
+- ✅ YES `BREVO_FROM_EMAIL` (verified in Brevo dashboard)
 
-### Functions Using SendGrid
-- `controllers/netlify-func/send-confirmation.js` - Uses `@sendgrid/mail` package
-- Initialization: `sgMail.setApiKey(process.env.SENDGRID_API_KEY)`
-- Send method: `await sgMail.send({to, from, subject, html})`
+### Functions Using Brevo
+- `controllers/netlify-func/send-confirmation.js` - Uses `@getbrevo/brevo` package
+- Initialization: `api.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)`
+- Send method: `await api.sendTransacEmail(sendSmtpEmail)`
 
 ### Netlify Deployment
 Set these environment variables in Netlify Dashboard → Site Settings → Build & Deploy → Environment:
 ```
-SENDGRID_API_KEY: SG.xxxxx... (from SendGrid API Keys)
-SENDGRID_FROM_EMAIL: noreply@yourwedding.com (verified)
+BREVO_API_KEY: xkeysib-xxxxx... (from Brevo API Keys)
+BREVO_FROM_EMAIL: noreply@yourwedding.com (verified)
 ADMIN_EMAIL: your-email@example.com
 ADMIN_SECRET: strong-password-here
 ```
 
-### SendGrid Quick Setup (5 minutes)
-1. Go to https://sendgrid.com/free → Sign up → Verify email
-2. Dashboard → Settings → API Keys → Create API Key → Copy (starts with `SG.`)
-3. Dashboard → Settings → Sender Authentication → Add verified sender email
+### Brevo Quick Setup (5 minutes)
+1. Go to https://www.brevo.com/ → Sign up → Verify email
+2. Dashboard → Settings → SMTP & API → API Keys → Create API Key → Copy (starts with `xkeysib-`)
+3. Dashboard → Senders, Domains & Dedicated IPs → Add verified sender email
 4. Paste API key into Netlify environment variables above
 5. Deploy to Netlify and test
 
@@ -242,4 +242,4 @@ ADMIN_SECRET: strong-password-here
 ---
 
 **Last Updated:** December 14, 2025  
-**Project Version:** 2.1.0 (Netlify Blob Storage + SendGrid Email)
+**Project Version:** 2.1.0 (Netlify Blob Storage + Brevo Email)

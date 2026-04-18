@@ -31,7 +31,7 @@ const response = await fetch('/.netlify/functions/submit-rsvp', {
 - **Public Bank Details** - IBAN for receiving payments (common practice)
 
 ### ❌ Never Expose:
-- **API Keys** - Notion, SendGrid, any service API keys
+- **API Keys** - Notion, Brevo, any service API keys
 - **Secrets** - Authentication tokens, private keys
 - **Passwords** - Any kind of password
 - **Private Keys** - Encryption keys, signing keys

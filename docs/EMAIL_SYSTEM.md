@@ -111,12 +111,10 @@ ADMIN_SECRET=your-secure-admin-password-here
 
 ### Alternative Email Services
 
-**SendGrid:**
-```
-EMAIL_HOST=smtp.sendgrid.net
-EMAIL_PORT=587
-EMAIL_USER=apikey
-EMAIL_PASS=your-sendgrid-api-key
+**Brevo (current project default):**
+```bash
+BREVO_API_KEY=xkeysib-your-api-key
+BREVO_FROM_EMAIL=noreply@yourwedding.com
 ```
 
 

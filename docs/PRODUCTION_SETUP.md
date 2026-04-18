@@ -13,7 +13,7 @@ Before starting, ensure you have:
 - ✅ **Node.js 18+** installed ([Download](https://nodejs.org/))
 - ✅ **Git** installed ([Download](https://git-scm.com/))
 - ✅ **Netlify account** ([Sign up](https://app.netlify.com/signup))
-- ✅ **SendGrid account** ([Sign up](https://signup.sendgrid.com/))
+- ✅ **Brevo account** ([Sign up](https://www.brevo.com/))
 - ✅ **Text editor** (VS Code recommended)
 
 ---
@@ -35,7 +35,7 @@ npm install
 
 This installs:
 - `@netlify/blobs` - For data storage
-- `@sendgrid/mail` - For email delivery
+- `@getbrevo/brevo` - For email delivery
 
 ---
 
@@ -49,28 +49,28 @@ Copy the example file:
 cp .env.example .env
 ```
 
-### 2.2 Set Up SendGrid
+### 2.2 Set Up Brevo
 
-1. **Create SendGrid Account**
-   - Go to [sendgrid.com](https://signup.sendgrid.com/)
-   - Sign up for a free account (100 emails/day free)
+1. **Create Brevo Account**
+   - Go to [brevo.com](https://www.brevo.com/)
+   - Sign up for a free account (300 emails/day free)
 
 2. **Create API Key**
-   - Go to Settings → API Keys
+   - Go to Settings → SMTP & API → API Keys
    - Click "Create API Key"
    - Name it "Wedding Website"
-   - Select "Full Access" (or "Mail Send" only)
+   - Select permissions that allow transactional email sending
    - Copy the API key (you won't see it again!)
 
 3. **Verify Sender Email**
-   - Go to Settings → Sender Authentication
+   - Go to Senders, Domains & Dedicated IPs
    - Verify your "From" email address
    - This is the email that will send confirmations
 
 4. **Update `.env` File**
    ```bash
-   SENDGRID_API_KEY=SG.your_api_key_here
-   SENDGRID_FROM_EMAIL=your-verified-email@domain.com
+   BREVO_API_KEY=xkeysib-your-api-key-here
+   BREVO_FROM_EMAIL=your-verified-email@domain.com
    ```
 
 ### 2.3 Set Up Admin Secret
@@ -207,8 +207,8 @@ Follow the prompts:
 2. Select your site
 3. Go to **Site Settings** → **Environment Variables**
 4. Add each variable from your `.env` file:
-   - `SENDGRID_API_KEY`
-   - `SENDGRID_FROM_EMAIL`
+  - `BREVO_API_KEY`
+  - `BREVO_FROM_EMAIL`
    - `ADMIN_SECRET`
 
 ### 5.3 Deploy
@@ -284,11 +284,11 @@ Or connect your GitHub repository for automatic deployments:
 **Symptoms:** No emails received after approving RSVP
 
 **Solutions:**
-1. Check SendGrid API key is correct
-2. Verify sender email is verified in SendGrid
-3. Check SendGrid account status (not suspended)
-4. Review function logs for SendGrid errors
-5. Check SendGrid activity feed for delivery status
+1. Check Brevo API key is correct
+2. Verify sender email is verified in Brevo
+3. Check Brevo account status (not suspended)
+4. Review function logs for Brevo API errors
+5. Check Brevo transactional logs for delivery status
 
 ### Admin Dashboard Not Loading
 
@@ -331,9 +331,9 @@ Or connect your GitHub repository for automatic deployments:
 
 ### 3. Email Security
 
-- ✅ Verify sender email in SendGrid
+- ✅ Verify sender email in Brevo
 - ✅ Use SPF/DKIM records for your domain
-- ✅ Monitor SendGrid for suspicious activity
+- ✅ Monitor Brevo for suspicious activity
 - ✅ Don't send sensitive data in emails
 
 ### 4. Data Protection
@@ -355,7 +355,7 @@ Or connect your GitHub repository for automatic deployments:
    - Send confirmation emails
 
 2. **Check Email Deliverability**
-   - Monitor SendGrid dashboard
+   - Monitor Brevo dashboard
    - Check bounce rates
    - Verify sender reputation
 
@@ -381,7 +381,7 @@ Or connect your GitHub repository for automatic deployments:
 ## Support Resources
 
 - **Netlify Docs:** [docs.netlify.com](https://docs.netlify.com/)
-- **SendGrid Docs:** [docs.sendgrid.com](https://docs.sendgrid.com/)
+- **Brevo Docs:** [developers.brevo.com](https://developers.brevo.com/)
 - **Project Documentation:** See `docs/` directory
 - **Architecture Guide:** `docs/ARCHITECTURE.md`
 - **Email System Guide:** `docs/EMAIL_SYSTEM.md`

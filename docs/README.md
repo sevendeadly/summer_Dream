@@ -36,7 +36,7 @@ Complete guide to RSVP storage and processing:
 
 ### **[EMAIL_SYSTEM.md](EMAIL_SYSTEM.md)** - Email Configuration
 Detailed email sending system documentation:
-- SendGrid integration setup
+- Brevo integration setup
 - Email templates
 - Admin approval workflow
 - Email testing
@@ -86,7 +86,7 @@ Security implementation guide:
 **...understand how RSVPs are stored**
 → [RSVP_SYSTEM.md](RSVP_SYSTEM.md)
 
-**...configure SendGrid for emails**
+**...configure Brevo for emails**
 → [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md) or [RSVP_SYSTEM.md](RSVP_SYSTEM.md#email-service-configuration)
 
 **...deploy to Netlify**
@@ -114,8 +114,8 @@ All Netlify environment variables used in the project:
 
 | Variable | Purpose | Example |
 |----------|---------|---------|
-| `SENDGRID_API_KEY` | SendGrid authentication | `SG.xxxxx...` |
-| `SENDGRID_FROM_EMAIL` | Sender email address | `noreply@yourwedding.com` |
+| `BREVO_API_KEY` | Brevo authentication | `xkeysib-xxxxx...` |
+| `BREVO_FROM_EMAIL` | Sender email address | `noreply@yourwedding.com` |
 | `ADMIN_EMAIL` | Admin notification email | `your-email@example.com` |
 | `ADMIN_SECRET` | Admin dashboard password | `strong-32-char-password` |
 
@@ -162,6 +162,6 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed version history and updates.
 
 ---
 
-**Last Updated:** December 14, 2025
+**Last Updated:** April 18, 2026
 
 Made with ❤️ for J-D & A-N's Special Day

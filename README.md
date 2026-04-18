@@ -4,7 +4,7 @@
 
 ## 🎉 Overview
 
-This is a production-ready wedding website featuring a complete RSVP system with email confirmations, an admin dashboard for managing guest responses, and a beautiful, responsive design. The system uses Netlify Blobs for data storage and SendGrid for email delivery.
+This is a production-ready wedding website featuring a complete RSVP system with email confirmations, an admin dashboard for managing guest responses, and a beautiful, responsive design. The system uses Netlify Blobs for data storage and Brevo for email delivery.
 
 **Wedding Date:** June 12, 2026  
 **Version:** 2.1.0 (Production Release)  
@@ -28,7 +28,7 @@ This is a production-ready wedding website featuring a complete RSVP system with
 ### RSVP & Admin Features
 - **📝 RSVP Form** - Guest-friendly form with validation
 - **💾 Data Storage** - Netlify Blobs for reliable data persistence
-- **📧 Email Confirmations** - Automated emails via SendGrid
+- **📧 Email Confirmations** - Automated emails via Brevo
   - Accepted template (when admin approves)
   - Declined template (when guest declines)
   - Admin-declined template (with optional reason)
@@ -45,7 +45,7 @@ This is a production-ready wedding website featuring a complete RSVP system with
 - **⚡ Serverless Functions** - Netlify Functions for backend operations
 - **🔒 Security** - Admin authentication with secret-based access
 - **📦 Modular Code** - ES6 modules with clear organization
-- **🎯 Zero Dependencies** - Pure JavaScript (except Netlify/SendGrid SDKs)
+- **🎯 Zero Dependencies** - Pure JavaScript (except Netlify/Brevo SDKs)
 
 ---
 
@@ -105,7 +105,7 @@ summer_Dream/
 ### Prerequisites
 - Node.js 18+ (for local development)
 - Netlify account (for deployment)
-- SendGrid account (for email delivery)
+- Brevo account (for email delivery)
 - Git (for version control)
 
 ### 1. Clone and Install
@@ -124,9 +124,9 @@ npm install
 Create a `.env` file (see `.env.example` for template):
 
 ```bash
-# SendGrid Configuration
-SENDGRID_API_KEY=your_sendgrid_api_key
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+# Brevo Configuration
+BREVO_API_KEY=your_brevo_api_key
+BREVO_FROM_EMAIL=noreply@yourdomain.com
 
 # Admin Security
 ADMIN_SECRET=your_secure_admin_secret
@@ -173,7 +173,7 @@ Or connect your GitHub repository to Netlify for automatic deployments.
 ### Setup Guides
 - **[Complete Setup Guide](docs/COMPLETE_SETUP.md)** - Step-by-step setup instructions
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Detailed deployment walkthrough
-- **[Email System Guide](docs/EMAIL_SYSTEM.md)** - SendGrid configuration and email templates
+- **[Email System Guide](docs/EMAIL_SYSTEM.md)** - Brevo configuration and email templates
 - **[RSVP System Guide](docs/RSVP_SYSTEM.md)** - RSVP workflow and admin dashboard usage
 
 ### Architecture
@@ -221,7 +221,7 @@ All HTML templates follow a consistent structure:
 **Serverless Functions (`controllers/netlify-func/`):**
 - `submit-rsvp.js` - Handles RSVP form submissions, stores in Netlify Blobs
 - `get-rsvps.js` - Retrieves all RSVPs for admin dashboard (with authentication)
-- `send-confirmation.js` - Sends email confirmations via SendGrid
+- `send-confirmation.js` - Sends email confirmations via Brevo
 
 ---
 
@@ -272,7 +272,7 @@ Admin reviews in dashboard
     ↓
 Admin approves/declines
     ↓
-Email sent via SendGrid
+Email sent via Brevo
     ↓
 RSVP status updated in storage
 ```
@@ -366,7 +366,7 @@ Before going live:
 - [ ] Update wedding date in `models/config.js`
 - [ ] Add payment links in `models/config.js`
 - [ ] Update names and content in `views/*.html`
-- [ ] Configure SendGrid API key
+- [ ] Configure Brevo API key
 - [ ] Set secure `ADMIN_SECRET`
 - [ ] Test RSVP submission flow
 - [ ] Test admin dashboard
@@ -389,8 +389,8 @@ Before going live:
 - Check environment variables
 
 **Emails not sending:**
-- Verify SendGrid API key
-- Check SendGrid account status
+- Verify Brevo API key
+- Check Brevo account status
 - Review function logs for errors
 
 **Admin dashboard not loading:**

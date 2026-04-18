@@ -22,7 +22,7 @@
 The RSVP system now stores data using **Netlify Blob Storage** (or alternative JSON file storage) instead of Notion. This allows:
 
 - ✅ **Multiple databases** - No API restrictions
-- ✅ **SendGrid email integration** - Automated confirmations
+- ✅ **Brevo email integration** - Automated confirmations
 - ✅ **Admin dashboard** - Review & approve RSVPs
 - ✅ **Secure backend** - API keys protected via environment variables
 - ✅ **Email confirmations** - Send to approved guests
@@ -32,7 +32,7 @@ The RSVP system now stores data using **Netlify Blob Storage** (or alternative J
 1. **Guest RSVP Form** - Guests submit attendance via web form
 2. **Serverless Processing** - Netlify function validates & stores data
 3. **Admin Review** - Dashboard for approving/declining RSVPs
-4. **Email Workflow** - Automated confirmations via SendGrid
+4. **Email Workflow** - Automated confirmations via Brevo
 5. **Data Storage** - Persistent storage via Netlify Blob or JSON backup
 
 ---
@@ -70,7 +70,7 @@ The RSVP system now stores data using **Netlify Blob Storage** (or alternative J
 ┌──────────────────────────┐
 │ Netlify Function         │
 │ /send-confirmation       │
-│ (SendGrid email)         │
+│ (Brevo email)            │
 └──────────────────────────┘
          │
          ↓
@@ -87,9 +87,9 @@ The RSVP system now stores data using **Netlify Blob Storage** (or alternative J
 Set these in **Netlify Dashboard** → **Site Settings** → **Environment Variables**:
 
 ```bash
-# SendGrid Email Configuration
-SENDGRID_API_KEY=SG.xxxxx...              # API key from SendGrid
-SENDGRID_FROM_EMAIL=noreply@yourwedding.com  # Verified sender email
+# Brevo Email Configuration
+BREVO_API_KEY=xkeysib-xxxxx...               # API key from Brevo
+BREVO_FROM_EMAIL=noreply@yourwedding.com     # Verified sender email
 
 # Admin Configuration
 ADMIN_EMAIL=your-email@example.com         # Where admin notifications go
@@ -104,8 +104,8 @@ ADMIN_SECRET=strong-random-password        # Admin dashboard auth
 Create `.env` in project root:
 
 ```bash
-SENDGRID_API_KEY=SG.xxxxx...
-SENDGRID_FROM_EMAIL=noreply@yourwedding.com
+BREVO_API_KEY=xkeysib-xxxxx...
+BREVO_FROM_EMAIL=noreply@yourwedding.com
 ADMIN_EMAIL=your-email@example.com
 ADMIN_SECRET=your-secret-here
 ```
@@ -260,7 +260,7 @@ Status: 401
 
 ### Confirmation Email Template
 
-When admin approves an RSVP, SendGrid sends:
+When admin approves an RSVP, Brevo sends:
 
 **If Attending (yes):**
 ```
@@ -297,21 +297,21 @@ Audrey & Josue-Daniel
 Email settings in `send-confirmation.js`:
 
 ```javascript
-const sgMail = require('@sendgrid/mail');
+const SibApiV3Sdk = require('@getbrevo/brevo');
 
 exports.handler = async (event, context) => {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  
-  const message = {
-    to: data.email,
-    from: process.env.SENDGRID_FROM_EMAIL,
-    subject: data.attending === 'yes' 
-      ? 'Your RSVP has been confirmed! 💍'
-      : 'Thank you for letting us know',
-    html: emailTemplate // See function for full template
-  };
+  const api = new SibApiV3Sdk.TransactionalEmailsApi();
+  api.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
-  await sgMail.send(message);
+  const message = new SibApiV3Sdk.SendSmtpEmail();
+  message.sender = { email: process.env.BREVO_FROM_EMAIL };
+  message.to = [{ email: data.email }];
+  message.subject = data.attending === 'yes'
+    ? 'Your RSVP has been confirmed! 💍'
+    : 'Thank you for letting us know';
+  message.htmlContent = emailTemplate;
+
+  await api.sendTransacEmail(message);
   return { statusCode: 200, body: JSON.stringify({ success: true }) };
 };
 ```
@@ -330,24 +330,24 @@ exports.handler = async (event, context) => {
    - Publish directory: `views`
 
 4. Set **Environment Variables**:
-   - `SENDGRID_API_KEY` - Get from SendGrid dashboard
-   - `SENDGRID_FROM_EMAIL` - Your verified sender email
+   - `BREVO_API_KEY` - Get from Brevo dashboard
+   - `BREVO_FROM_EMAIL` - Your verified sender email
    - `ADMIN_EMAIL` - Your email
    - `ADMIN_SECRET` - Strong password
 
-### Step 2: Get SendGrid API Key
+### Step 2: Get Brevo API Key
 
-1. Go to [sendgrid.com](https://sendgrid.com/) → Sign up (free)
-2. Dashboard → Settings → API Keys → Create API Key
-3. Copy key (starts with `SG.`)
+1. Go to [brevo.com](https://www.brevo.com/) → Sign up (free)
+2. Dashboard → Settings → SMTP & API → API Keys → Create API Key
+3. Copy key (starts with `xkeysib-`)
 4. Add to Netlify environment variables
 
 ### Step 3: Verify Sender Email
 
-1. SendGrid Dashboard → Settings → Sender Authentication
+1. Brevo Dashboard → Senders, Domains & Dedicated IPs
 2. Add sender email: `noreply@yourwedding.com`
 3. Verify email (click confirmation link)
-4. Use this email in `SENDGRID_FROM_EMAIL` environment variable
+4. Use this email in `BREVO_FROM_EMAIL` environment variable
 
 ### Step 4: Deploy
 
@@ -431,7 +431,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 
 **Check:**
 1. Are environment variables set in Netlify?
-2. Is SendGrid API key valid?
+2. Is Brevo API key valid?
 3. Check Netlify function logs for errors
 
 ### Issue: Admin dashboard won't authenticate
@@ -444,9 +444,9 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ### Issue: Email not received
 
 **Check:**
-1. Is SendGrid API key correct?
-2. Is sender email verified in SendGrid?
-3. Check SendGrid Activity Feed for bounces
+1. Is Brevo API key correct?
+2. Is sender email verified in Brevo?
+3. Check Brevo transactional activity for bounces
 4. Check spam folder
 
 ### Issue: RSVPs not showing in admin
@@ -463,9 +463,9 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 For issues:
 1. Check Netlify function logs
 2. Check browser console (F12)
-3. Check SendGrid Activity Feed
+3. Check Brevo transactional activity
 4. Review environment variables
 
 ---
 
-**Last Updated:** December 14, 2025
+**Last Updated:** April 18, 2026
