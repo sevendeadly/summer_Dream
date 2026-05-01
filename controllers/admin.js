@@ -195,7 +195,17 @@ export class AdminController {
             
             this.allRSVPs = data.results || [];
             console.log(`Total RSVPs: ${this.allRSVPs.length}`);
-            
+
+            if (typeof data.listedBlobCount === 'number' && data.listedBlobCount !== this.allRSVPs.length) {
+                const msg =
+                    `Loaded ${this.allRSVPs.length} RSVPs but blob store listed ${data.listedBlobCount} keys. ` +
+                    'Some blobs may be empty, invalid JSON, or failed to load.';
+                console.warn('⚠️ RSVP count mismatch:', msg, data.failedBlobLoads || '');
+                if (Array.isArray(data.failedBlobLoads) && data.failedBlobLoads.length > 0) {
+                    alert(`${msg}\n\n${data.failedBlobLoads.length} blob read(s) failed. Details are in the browser console.`);
+                }
+            }
+
             this.applyFilters();
         } catch (error) {
             console.error('❌ Error loading RSVPs:', error);
