@@ -43,7 +43,7 @@ const response = await fetch('/.netlify/functions/submit-rsvp', {
 #### Safe Configuration (`models/config.js`):
 ```javascript
 // ✅ Safe - Public information
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2026-06-12T16:00:00').getTime();
 
 // ✅ Safe - Public payment links
 export const PAYMENT_LINKS = {

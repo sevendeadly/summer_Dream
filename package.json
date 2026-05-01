@@ -4,7 +4,6 @@
   "description": "J-D & A-N Wedding Website",
   "dependencies": {
     "@getbrevo/brevo": "^5.0.4",
-    "@netlify/blobs": "^6.5.0",
-    "brevo": "^1.0.0"
+    "@netlify/blobs": "^6.5.0"
   }
 }

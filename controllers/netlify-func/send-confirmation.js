@@ -403,12 +403,11 @@ function getAcceptedTemplate(data, adminMessage = '') {
             
             <h3 style="color: #d4a5a5;">What to Expect</h3>
             <ul>
-              <li> Guest Arrival</li>
-              <li> Welcome Drinks</li>
-              <li> Religious Ceremony Begins</li>
-              <li> Cocktail Hour</li>
-              <li> Reception & Dinner</li>
-              <li> Last Dance</li>
+              <li>4:00 PM — Guest Arrival</li>
+              <li>4:30 PM — Welcome Drinks</li>
+              <li>6:00 PM — Religious Ceremony Begins</li>
+              <li>7:30 PM — Reception &amp; Dinner</li>
+              <li>11:00 PM — Last Dance</li>
             </ul>
             
             <p style="margin-top: 30px;">If you have any questions or need to update your RSVP, please reply to this email or visit our website.</p>
