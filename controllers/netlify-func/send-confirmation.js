@@ -27,7 +27,11 @@
 // - Environment variables for sensitive data (API keys, secrets)
 // ===========================
 
+<<<<<<< switch-out-sendgrid-for-brevo
 const { BrevoClient } = require('@getbrevo/brevo');
+=======
+const SibApiV3Sdk = require('@getbrevo/brevo');
+>>>>>>> main
 const { getStore } = require('@netlify/blobs');
 
 /**
@@ -211,10 +215,19 @@ exports.handler = async (event, context) => {
     const declineReason = data.declineReason || '';
 
     // Initialize Brevo transactional email API client
+<<<<<<< switch-out-sendgrid-for-brevo
     const brevoClient = new BrevoClient({
       apiKey: BREVO_API_KEY
     });
     console.log(` ✅ Brevo client initialized`);
+=======
+    const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
+    console.log(` ✅ Brevo client initialized`);
+    brevoClient.setApiKey(
+      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+      BREVO_API_KEY
+    );
+>>>>>>> main
 
     // ============================================
     // EMAIL TEMPLATE SELECTION LOGIC
@@ -250,12 +263,21 @@ exports.handler = async (event, context) => {
     }
 
     // Send email via Brevo
+<<<<<<< switch-out-sendgrid-for-brevo
     await brevoClient.transactionalEmails.sendTransacEmail({
       sender: { email: BREVO_FROM_EMAIL },
       to: [{ email: rsvp.email, name: rsvp.name || '' }],
       subject: emailTemplate.subject,
       htmlContent: emailTemplate.html
     });
+=======
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    sendSmtpEmail.sender = { email: BREVO_FROM_EMAIL };
+    sendSmtpEmail.to = [{ email: rsvp.email, name: rsvp.name || '' }];
+    sendSmtpEmail.subject = emailTemplate.subject;
+    sendSmtpEmail.htmlContent = emailTemplate.html;
+    await brevoClient.sendTransacEmail(sendSmtpEmail);
+>>>>>>> main
 
     // Update RSVP status in storage
     await store.set(data.rsvpId, JSON.stringify(rsvp));
@@ -281,9 +303,15 @@ exports.handler = async (event, context) => {
         statusCode: error.response.statusCode,
         body: error.response.body
       });
+<<<<<<< switch-out-sendgrid-for-brevo
     } else if (error.statusCode || error.status || error.body) {
       console.error(`[${requestId}] Brevo error details:`, {
         statusCode: error.statusCode || error.status,
+=======
+    } else if (error.status || error.body) {
+      console.error(`[${requestId}] Brevo error details:`, {
+        statusCode: error.status,
+>>>>>>> main
         body: error.body
       });
     }

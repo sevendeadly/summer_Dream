@@ -3,8 +3,13 @@
   "version": "2.1.0",
   "description": "J-D & A-N Wedding Website",
   "dependencies": {
+<<<<<<< switch-out-sendgrid-for-brevo
     "@getbrevo/brevo": "^5.0.4",
     "@netlify/blobs": "^6.5.0",
     "brevo": "^1.0.0"
+=======
+    "@getbrevo/brevo": "^2.5.0",
+    "@netlify/blobs": "^6.5.0"
+>>>>>>> main
   }
 }
