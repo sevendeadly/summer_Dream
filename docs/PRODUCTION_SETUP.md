@@ -105,7 +105,7 @@ Edit `models/config.js`:
 
 ```javascript
 // Update wedding date and time
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2026-06-12T18:00:00').getTime();
 // Format: YYYY-MM-DDTHH:MM:SS (24-hour format)
 
 // Update payment links

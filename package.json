@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "description": "J-D & A-N Wedding Website",
   "dependencies": {
-    "@getbrevo/brevo": "^2.5.0",
+    "@getbrevo/brevo": "^5.0.4",
     "@netlify/blobs": "^6.5.0"
   }
 }

@@ -27,7 +27,7 @@
 // - Environment variables for sensitive data (API keys, secrets)
 // ===========================
 
-const SibApiV3Sdk = require('@getbrevo/brevo');
+const { BrevoClient } = require('@getbrevo/brevo');
 const { getStore } = require('@netlify/blobs');
 
 /**
@@ -211,12 +211,10 @@ exports.handler = async (event, context) => {
     const declineReason = data.declineReason || '';
 
     // Initialize Brevo transactional email API client
-    const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
+    const brevoClient = new BrevoClient({
+      apiKey: BREVO_API_KEY
+    });
     console.log(` ✅ Brevo client initialized`);
-    brevoClient.setApiKey(
-      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-      BREVO_API_KEY
-    );
 
     // ============================================
     // EMAIL TEMPLATE SELECTION LOGIC
@@ -252,12 +250,12 @@ exports.handler = async (event, context) => {
     }
 
     // Send email via Brevo
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.sender = { email: BREVO_FROM_EMAIL };
-    sendSmtpEmail.to = [{ email: rsvp.email, name: rsvp.name || '' }];
-    sendSmtpEmail.subject = emailTemplate.subject;
-    sendSmtpEmail.htmlContent = emailTemplate.html;
-    await brevoClient.sendTransacEmail(sendSmtpEmail);
+    await brevoClient.transactionalEmails.sendTransacEmail({
+      sender: { email: BREVO_FROM_EMAIL },
+      to: [{ email: rsvp.email, name: rsvp.name || '' }],
+      subject: emailTemplate.subject,
+      htmlContent: emailTemplate.html
+    });
 
     // Update RSVP status in storage
     await store.set(data.rsvpId, JSON.stringify(rsvp));
@@ -283,9 +281,9 @@ exports.handler = async (event, context) => {
         statusCode: error.response.statusCode,
         body: error.response.body
       });
-    } else if (error.status || error.body) {
+    } else if (error.statusCode || error.status || error.body) {
       console.error(`[${requestId}] Brevo error details:`, {
-        statusCode: error.status,
+        statusCode: error.statusCode || error.status,
         body: error.body
       });
     }
@@ -405,12 +403,11 @@ function getAcceptedTemplate(data, adminMessage = '') {
             
             <h3 style="color: #d4a5a5;">What to Expect</h3>
             <ul>
-              <li> Guest Arrival</li>
-              <li> Welcome Drinks</li>
-              <li> Religious Ceremony Begins</li>
-              <li> Cocktail Hour</li>
-              <li> Reception & Dinner</li>
-              <li> Last Dance</li>
+              <li>4:00 PM — Guest Arrival</li>
+              <li>4:30 PM — Welcome Drinks</li>
+              <li>6:00 PM — Religious Ceremony Begins</li>
+              <li>7:30 PM — Reception &amp; Dinner</li>
+              <li>11:00 PM — Last Dance</li>
             </ul>
             
             <p style="margin-top: 30px;">If you have any questions or need to update your RSVP, please reply to this email or visit our website.</p>

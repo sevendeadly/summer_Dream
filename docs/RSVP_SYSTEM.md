@@ -270,8 +270,8 @@ Dear [Guest Name],
 
 Thank you for confirming your attendance!
 
-Date: Saturday, June 12, 2026 at 3:30 PM
-Location: [Venue Name], [Address]
+Date: Friday, June 12, 2026 (religious ceremony begins 4:00 PM)
+Location: [Venue address per views/info.html]
 
 We look forward to celebrating with you!
 

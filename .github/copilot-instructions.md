@@ -77,7 +77,7 @@ export class FeatureController {
 
 ### 2. Environment Variables & Configuration
 - All config in `models/config.js` using ES6 `export const`
-- Wedding date: `new Date('2026-06-12T15:30:00').getTime()` (note: stored as timestamp)
+- Wedding date: `new Date('2026-06-12T18:00:00').getTime()` (ceremony start; stored as timestamp)
 - Theme palettes: `THEME_PALETTES` object with `name`, `primary`, `secondary` keys
 - Payment links: `PAYMENT_LINKS` object (PayPal, Wise, Wero, bank transfer)
 

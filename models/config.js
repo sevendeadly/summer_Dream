@@ -51,9 +51,9 @@ export const PAYMENT_LINKS = {
  * The date is converted to milliseconds since epoch using .getTime() for
  * easy comparison with Date.now() in JavaScript.
  * 
- * Example: '2026-06-12T15:30:00' = June 12, 2026 at 3:30 PM
+ * Example: '2026-06-12T18:00:00' = June 12, 2026 at 4:00 PM (ceremony start; see views/info.html)
  */
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2026-06-12T16:00:00').getTime();
 
 // Album configuration - Update these links after the wedding
 export const ALBUM_LINKS = {

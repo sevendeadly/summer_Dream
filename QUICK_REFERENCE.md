@@ -12,7 +12,7 @@ See [VERSIONS.md](VERSIONS.md) for comparison.
 Edit `models/config.js`:
 ```javascript
 // Wedding date
-export const WEDDING_DATE = new Date('2026-06-12T15:30:00').getTime();
+export const WEDDING_DATE = new Date('2026-06-12T16:00:00').getTime();
 
 // Payment links
 export const PAYMENT_LINKS = {

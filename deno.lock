@@ -11,8 +11,9 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@getbrevo/brevo@^2.5.0",
-        "npm:@netlify/blobs@^6.5.0"
+        "npm:@getbrevo/brevo@^5.0.4",
+        "npm:@netlify/blobs@^6.5.0",
+        "npm:brevo@1"
       ]
     }
   }

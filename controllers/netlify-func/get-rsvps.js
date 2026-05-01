@@ -6,8 +6,69 @@
 
 const { getStore } = require('@netlify/blobs');
 
+const GET_CONCURRENCY = 8;
+const GET_MAX_RETRIES = 3;
+const GET_RETRY_BASE_MS = 150;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Collect every blob key using explicit pagination (belt-and-suspenders on Netlify).
+ * The default `list()` also aggregates pages, but iterating with `paginate: true`
+ * makes behavior obvious and easier to log.
+ */
+async function listAllBlobKeys(store, requestId) {
+  const keys = [];
+  const seen = new Set();
+
+  for await (const entry of store.list({ paginate: true })) {
+    for (const blob of entry.blobs || []) {
+      if (blob?.key && !seen.has(blob.key)) {
+        seen.add(blob.key);
+        keys.push(blob.key);
+      }
+    }
+  }
+
+  console.log(`[${requestId}] 📋 Listed ${keys.length} unique blob keys (paginated)`);
+  return keys;
+}
+
+async function getBlobTextWithRetry(store, key, requestId) {
+  let lastError;
+  for (let attempt = 1; attempt <= GET_MAX_RETRIES; attempt++) {
+    try {
+      return await store.get(key);
+    } catch (err) {
+      lastError = err;
+      const wait = GET_RETRY_BASE_MS * Math.pow(2, attempt - 1);
+      console.warn(
+        `[${requestId}] ⚠️ store.get("${key}") failed (attempt ${attempt}/${GET_MAX_RETRIES}): ${err.message}. Retrying in ${wait}ms`
+      );
+      await sleep(wait);
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * Run async work in limited parallel batches (avoids thundering herd on Blobs API).
+ */
+async function mapInBatches(items, batchSize, mapper) {
+  const out = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchOut = await Promise.all(batch.map(mapper));
+    out.push(...batchOut);
+  }
+  return out;
+}
+
 exports.handler = async (event, context) => {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const startedAt = Date.now();
   console.log(`[${requestId}] 📥 Get RSVPs request received`);
 
   // Only allow GET requests
@@ -32,27 +93,22 @@ exports.handler = async (event, context) => {
   }
 
   // Decode base64-encoded secret (handles non-ASCII characters)
-  // Node.js doesn't have atob - use Buffer instead
   const originalSecret = secret;
   try {
     if (secret) {
-      // Check if it looks like base64 (optional - for backward compatibility)
       const isBase64 = /^[A-Za-z0-9+/=]+$/.test(secret) && secret.length > 10;
-      
+
       if (isBase64) {
-        // Decode base64 using Node.js Buffer
         const decoded = Buffer.from(secret, 'base64').toString('utf-8');
         secret = decoded;
         console.log(`[${requestId}] ✅ Decoded base64 secret (length: ${secret.length})`);
       } else {
-        // Not base64, use as-is (backward compatibility)
         console.log(`[${requestId}] ℹ️ Secret doesn't appear to be base64, using as-is`);
       }
     }
   } catch (decodeError) {
-    // If decoding fails, try using the secret as-is (backward compatibility)
     console.warn(`[${requestId}] ⚠️ Failed to decode secret, trying as-is:`, decodeError.message);
-    secret = originalSecret; // Fall back to original
+    secret = originalSecret;
   }
 
   if (secret !== ADMIN_SECRET) {
@@ -68,15 +124,12 @@ exports.handler = async (event, context) => {
 
   try {
     console.log(`[${requestId}] 💾 Initializing blob store...`);
-    
+
     let store;
     try {
-      // In production, Netlify automatically provides the execution context
-      // Try auto-detection first (works in production Netlify)
       store = getStore('rsvps');
       console.log(`[${requestId}] ✅ Blob store initialized (auto-detect - production mode)`);
     } catch (autoDetectError) {
-      // If auto-detection fails, try with explicit env vars (for local dev)
       if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
         store = getStore({
           name: 'rsvps',
@@ -89,50 +142,74 @@ exports.handler = async (event, context) => {
         throw autoDetectError;
       }
     }
-    
-    // Get all RSVP entries from blob storage
-    console.log(`[${requestId}] 📋 Listing all RSVPs...`);
-    const { blobs } = await store.list();
-    console.log(`[${requestId}] Found ${blobs.length} RSVP entries`);
-    
+
+    const keys = await listAllBlobKeys(store, requestId);
+    const readStartedAt = Date.now();
+
+    const failedKeys = [];
+
+    const readResults = await mapInBatches(keys, GET_CONCURRENCY, async (key) => {
+      try {
+        const rsvpData = await getBlobTextWithRetry(store, key, requestId);
+        if (!rsvpData) {
+          return { key, rsvp: null, error: null };
+        }
+        try {
+          return { key, rsvp: JSON.parse(rsvpData), error: null };
+        } catch (parseError) {
+          console.error(`[${requestId}] ⚠️ Error parsing RSVP ${key}:`, parseError.message);
+          return { key, rsvp: null, error: 'parse' };
+        }
+      } catch (err) {
+        console.error(`[${requestId}] ❌ Failed to read RSVP blob ${key} after retries:`, err.message);
+        failedKeys.push({ key, message: err.message });
+        return { key, rsvp: null, error: 'get' };
+      }
+    });
+
+    console.log(`[${requestId}] ⚡ Blob reads finished in ${Date.now() - readStartedAt}ms`);
+
     const rsvps = [];
     let pending = 0;
     let approved = 0;
     let declined = 0;
 
-    // Fetch each RSVP
-    for (const blob of blobs) {
-      try {
-        const rsvpData = await store.get(blob.key);
-        if (rsvpData) {
-          const rsvp = JSON.parse(rsvpData);
-          rsvps.push(rsvp);
-
-          // Count by status
-          if (rsvp.status === 'pending') pending++;
-          else if (rsvp.status === 'approved') approved++;
-          else if (rsvp.status === 'declined') declined++;
-        }
-      } catch (parseError) {
-        console.error(`[${requestId}] ⚠️ Error parsing RSVP ${blob.key}:`, parseError.message);
-        // Continue with other RSVPs
-      }
+    for (const row of readResults) {
+      if (!row.rsvp) continue;
+      rsvps.push(row.rsvp);
+      if (row.rsvp.status === 'pending') pending++;
+      else if (row.rsvp.status === 'approved') approved++;
+      else if (row.rsvp.status === 'declined') declined++;
     }
 
     // Sort by submission date (newest first)
     rsvps.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
-    console.log(`[${requestId}] ✅ Retrieved ${rsvps.length} RSVPs (${pending} pending, ${approved} approved, ${declined} declined)`);
+    const durationMs = Date.now() - startedAt;
+    console.log(
+      `[${requestId}] ✅ Retrieved ${rsvps.length}/${keys.length} RSVPs (${pending} pending, ${approved} approved, ${declined} declined) in ${durationMs}ms`
+    );
+
+    if (failedKeys.length > 0) {
+      console.error(`[${requestId}] ⚠️ ${failedKeys.length} blob(s) could not be loaded:`, failedKeys);
+    }
+
+    const payload = {
+      results: rsvps,
+      total: rsvps.length,
+      pending,
+      approved,
+      declined,
+      listedBlobCount: keys.length
+    };
+
+    if (failedKeys.length > 0) {
+      payload.failedBlobLoads = failedKeys;
+    }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        results: rsvps,
-        total: rsvps.length,
-        pending: pending,
-        approved: approved,
-        declined: declined
-      })
+      body: JSON.stringify(payload)
     };
   } catch (error) {
     console.error(`[${requestId}] ❌ ========== ERROR OCCURRED ==========`);
@@ -140,7 +217,7 @@ exports.handler = async (event, context) => {
     console.error(`[${requestId}] Error message:`, error.message);
     console.error(`[${requestId}] Stack trace:`, error.stack);
     console.error(`[${requestId}] =======================================`);
-    
+
     return {
       statusCode: 500,
       body: JSON.stringify({
