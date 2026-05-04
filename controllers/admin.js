@@ -632,6 +632,43 @@ export class AdminController {
         }
     }
 
+    async deleteRSVP(rsvpId) {
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            alert('RSVP not found');
+            return;
+        }
+
+        const shouldDelete = confirm(
+            `Delete RSVP for ${rsvp.name} (${rsvp.email})?\n\n` +
+            'This will permanently remove the RSVP from storage.'
+        );
+        if (!shouldDelete) return;
+
+        try {
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            const response = await fetch('/.netlify/functions/delete-rsvp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': encodedSecret
+                },
+                body: JSON.stringify({ rsvpId })
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            alert('🗑️ RSVP deleted successfully');
+            await this.loadRSVPs();
+        } catch (error) {
+            console.error('❌ Error deleting RSVP:', error);
+            alert(`Failed to delete RSVP: ${error.message}`);
+        }
+    }
+
     viewDetails(rsvpId) {
         const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
         if (!rsvp) return;
