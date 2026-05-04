@@ -94,6 +94,7 @@ exports.handler = async (event, context) => {
     console.log(`[${requestId}] Request data:`, {
       rsvpId: data.rsvpId,
       status: data.status,
+      resendOnly: !!data.resendOnly,
       declineReason: data.declineReason ? '[provided]' : 'none',
       adminMessage: data.adminMessage ? '[provided]' : 'none'
     });
@@ -201,20 +202,51 @@ exports.handler = async (event, context) => {
 
     const rsvp = JSON.parse(rsvpData);
 
+    const brevoClient = new BrevoClient({
+      apiKey: BREVO_API_KEY
+    });
+    console.log(` ✅ Brevo client initialized`);
+
+    // Resend approved confirmation only: do not change RSVP status or blob data
+    if (data.resendOnly === true) {
+      if (data.status !== 'Approved') {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'resendOnly requires status Approved' })
+        };
+      }
+      if (rsvp.status !== 'approved') {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'Can only resend for RSVPs already approved' })
+        };
+      }
+
+      const adminMessage = data.adminMessage || '';
+      const emailTemplate = getAcceptedTemplate(rsvp, adminMessage);
+
+      await brevoClient.transactionalEmails.sendTransacEmail({
+        sender: { email: BREVO_FROM_EMAIL },
+        to: [{ email: rsvp.email, name: rsvp.name || '' }],
+        subject: emailTemplate.subject,
+        htmlContent: emailTemplate.html
+      });
+
+      console.log(`[${requestId}] 📧 Resent approval email to ${rsvp.email} (no blob update)`);
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: true, message: 'Approval email resent', resendOnly: true })
+      };
+    }
+
     // Determine new status based on action (approve or decline)
     // If status is 'Approved' in request, set to approved, else declined
     const newStatus = data.status === 'Approved' ? 'approved' : 'declined';
     rsvp.status = newStatus;
     rsvp.approvedAt = new Date().toISOString();
-    
+
     // Store decline reason if provided
     const declineReason = data.declineReason || '';
-
-    // Initialize Brevo transactional email API client
-    const brevoClient = new BrevoClient({
-      apiKey: BREVO_API_KEY
-    });
-    console.log(` ✅ Brevo client initialized`);
 
     // ============================================
     // EMAIL TEMPLATE SELECTION LOGIC
@@ -233,7 +265,7 @@ exports.handler = async (event, context) => {
     // This distinction is important for the guest experience:
     // - Scenario 2 requires a more sensitive approach (admin is declining their request)
     // - Scenario 3 is just confirming what the guest already decided
-    
+
     let emailTemplate;
     if (newStatus === 'approved') {
       // Admin approved the RSVP
