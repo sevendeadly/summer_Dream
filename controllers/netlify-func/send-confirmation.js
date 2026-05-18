@@ -1,10 +1,10 @@
 // ===========================
-// NETLIFY FUNCTION: Send Confirmation Email (SendGrid)
+// NETLIFY FUNCTION: Send Confirmation Email (Brevo)
 // File: controllers/netlify-func/send-confirmation.js
 // 
 // PURPOSE:
 // This serverless function handles sending email confirmations to guests when
-// an admin approves or declines their RSVP. It integrates with SendGrid for
+// an admin approves or declines their RSVP. It integrates with Brevo for
 // email delivery and Netlify Blobs for data storage.
 //
 // WORKFLOW:
@@ -16,7 +16,7 @@
 //    - Approved: Accepted template (with optional admin message)
 //    - Declined + guest wanted to attend: Admin-declined template (with reason)
 //    - Declined + guest didn't want to attend: User-declined template
-// 6. Function sends email via SendGrid
+// 6. Function sends email via Brevo
 // 7. Function updates RSVP status in storage
 // 8. Function returns success/error response
 //
@@ -27,7 +27,7 @@
 // - Environment variables for sensitive data (API keys, secrets)
 // ===========================
 
-const sgMail = require('@sendgrid/mail');
+const { BrevoClient } = require('@getbrevo/brevo');
 const { getStore } = require('@netlify/blobs');
 
 /**
@@ -71,21 +71,21 @@ exports.handler = async (event, context) => {
   // These are set in Netlify Dashboard → Site Settings → Environment Variables
   // Never hardcode these values in the code!
   
-  const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-  const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@yourwedding.com';
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL || 'noreply@yourwedding.com';
   const ADMIN_SECRET = process.env.ADMIN_SECRET;
   
   console.log(`[${requestId}] Environment check:`, {
-    hasSendGridKey: !!SENDGRID_API_KEY,
-    fromEmail: SENDGRID_FROM_EMAIL,
+    hasBrevoKey: !!BREVO_API_KEY,
+    fromEmail: BREVO_FROM_EMAIL,
     hasAdminSecret: !!ADMIN_SECRET
   });
   
-  if (!SENDGRID_API_KEY) {
-    console.error(`[${requestId}] ❌ SendGrid API key not configured`);
+  if (!BREVO_API_KEY) {
+    console.error(`[${requestId}] ❌ Brevo API key not configured`);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'SendGrid API key not configured' }),
+      body: JSON.stringify({ error: 'Brevo API key not configured' }),
     };
   }
 
@@ -94,6 +94,7 @@ exports.handler = async (event, context) => {
     console.log(`[${requestId}] Request data:`, {
       rsvpId: data.rsvpId,
       status: data.status,
+      resendOnly: !!data.resendOnly,
       declineReason: data.declineReason ? '[provided]' : 'none',
       adminMessage: data.adminMessage ? '[provided]' : 'none'
     });
@@ -201,17 +202,51 @@ exports.handler = async (event, context) => {
 
     const rsvp = JSON.parse(rsvpData);
 
+    const brevoClient = new BrevoClient({
+      apiKey: BREVO_API_KEY
+    });
+    console.log(` ✅ Brevo client initialized`);
+
+    // Resend approved confirmation only: do not change RSVP status or blob data
+    if (data.resendOnly === true) {
+      if (data.status !== 'Approved') {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'resendOnly requires status Approved' })
+        };
+      }
+      if (rsvp.status !== 'approved') {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'Can only resend for RSVPs already approved' })
+        };
+      }
+
+      const adminMessage = data.adminMessage || '';
+      const emailTemplate = getAcceptedTemplate(rsvp, adminMessage);
+
+      await brevoClient.transactionalEmails.sendTransacEmail({
+        sender: { email: BREVO_FROM_EMAIL },
+        to: [{ email: rsvp.email, name: rsvp.name || '' }],
+        subject: emailTemplate.subject,
+        htmlContent: emailTemplate.html
+      });
+
+      console.log(`[${requestId}] 📧 Resent approval email to ${rsvp.email} (no blob update)`);
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: true, message: 'Approval email resent', resendOnly: true })
+      };
+    }
+
     // Determine new status based on action (approve or decline)
     // If status is 'Approved' in request, set to approved, else declined
     const newStatus = data.status === 'Approved' ? 'approved' : 'declined';
     rsvp.status = newStatus;
     rsvp.approvedAt = new Date().toISOString();
-    
+
     // Store decline reason if provided
     const declineReason = data.declineReason || '';
-
-    // Initialize SendGrid
-    sgMail.setApiKey(SENDGRID_API_KEY);
 
     // ============================================
     // EMAIL TEMPLATE SELECTION LOGIC
@@ -230,7 +265,7 @@ exports.handler = async (event, context) => {
     // This distinction is important for the guest experience:
     // - Scenario 2 requires a more sensitive approach (admin is declining their request)
     // - Scenario 3 is just confirming what the guest already decided
-    
+
     let emailTemplate;
     if (newStatus === 'approved') {
       // Admin approved the RSVP
@@ -246,12 +281,12 @@ exports.handler = async (event, context) => {
       emailTemplate = getDeclinedTemplate(rsvp);
     }
 
-    // Send email via SendGrid
-    await sgMail.send({
-      to: rsvp.email,
-      from: SENDGRID_FROM_EMAIL,
+    // Send email via Brevo
+    await brevoClient.transactionalEmails.sendTransacEmail({
+      sender: { email: BREVO_FROM_EMAIL },
+      to: [{ email: rsvp.email, name: rsvp.name || '' }],
       subject: emailTemplate.subject,
-      html: emailTemplate.html,
+      htmlContent: emailTemplate.html
     });
 
     // Update RSVP status in storage
@@ -272,11 +307,16 @@ exports.handler = async (event, context) => {
     console.error(`[${requestId}] Error message:`, error.message);
     console.error(`[${requestId}] Stack trace:`, error.stack);
     
-    // Check for SendGrid-specific errors
+    // Check for Brevo SDK/API-specific errors
     if (error.response) {
-      console.error(`[${requestId}] SendGrid error response:`, {
+      console.error(`[${requestId}] Brevo error response:`, {
         statusCode: error.response.statusCode,
         body: error.response.body
+      });
+    } else if (error.statusCode || error.status || error.body) {
+      console.error(`[${requestId}] Brevo error details:`, {
+        statusCode: error.statusCode || error.status,
+        body: error.body
       });
     }
     
@@ -395,12 +435,11 @@ function getAcceptedTemplate(data, adminMessage = '') {
             
             <h3 style="color: #d4a5a5;">What to Expect</h3>
             <ul>
-              <li>2:00 PM - Guest Arrival</li>
-              <li>2:30 PM - Welcome Drinks</li>
-              <li>3:30 PM - Religious Ceremony Begins</li>
-              <li>4:30 PM - Cocktail Hour</li>
-              <li>7:30 PM - Reception & Dinner</li>
-              <li>10:00 PM - Last Dance</li>
+              <li>4:00 PM — Guest Arrival</li>
+              <li>4:30 PM — Welcome Drinks</li>
+              <li>6:00 PM — Religious Ceremony Begins</li>
+              <li>7:30 PM — Reception &amp; Dinner</li>
+              <li>11:00 PM — Last Dance</li>
             </ul>
             
             <p style="margin-top: 30px;">If you have any questions or need to update your RSVP, please reply to this email or visit our website.</p>

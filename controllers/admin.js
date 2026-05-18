@@ -29,11 +29,26 @@ export class AdminController {
         this.statsTotal = document.getElementById('stats-total');
         this.statsApprovedGuests = document.getElementById('stats-approved-guests');
         this.paginationControls = document.getElementById('pagination-controls');
+
+        this.toastStack = document.getElementById('admin-toast-stack');
+        this.modalRoot = document.getElementById('admin-modal-root');
+        this.modalTitle = document.getElementById('admin-modal-title');
+        this.modalMessage = document.getElementById('admin-modal-message');
+        this.modalTextarea = document.getElementById('admin-modal-textarea');
+        this.modalSuccess = document.getElementById('admin-modal-success');
+        this.modalCancel = document.getElementById('admin-modal-cancel');
+        this.modalConfirm = document.getElementById('admin-modal-confirm');
+        /** @type {null | ((value: unknown) => void)} */
+        this._modalFinish = null;
+        /** @type {null | string} */
+        this._modalMode = null;
+        this._successAutoCloseTimer = null;
     }
 
     // Initialize admin dashboard
     init() {
         if (!this.loginSection) return; // Not on admin page
+        window.adminController = this;
 
         this.setupEventListeners();
         
@@ -82,12 +97,30 @@ export class AdminController {
             // Set default value
             this.rowsPerPage.value = this.itemsPerPage.toString();
         }
+
+        if (this.rsvpTable) {
+            this.rsvpTable.addEventListener('click', (event) => this.handleTableClick(event));
+        }
+
+        if (this.paginationControls) {
+            this.paginationControls.addEventListener('click', (event) => this.handlePaginationClick(event));
+        }
+
+        if (this.modalCancel && this.modalConfirm && this.modalRoot) {
+            this.modalCancel.addEventListener('click', () => this.finishAdminModal(null));
+            this.modalConfirm.addEventListener('click', () => this.onAdminModalConfirm());
+            this.modalRoot.addEventListener('click', (e) => {
+                if (e.target && e.target.closest && e.target.closest('[data-admin-modal-dismiss]')) {
+                    this.finishAdminModal(null);
+                }
+            });
+        }
     }
 
     handleLogin() {
         const secret = this.secretInput?.value.trim();
         if (!secret) {
-            alert('Please enter admin secret');
+            this.showToast('Please enter admin secret', 'error');
             return;
         }
 
@@ -174,7 +207,7 @@ export class AdminController {
                 console.error('Error response:', errorData);
                 
                 if (response.status === 401) {
-                    alert('Invalid admin secret. Please login again.');
+                    this.showToast('Invalid admin secret. Please login again.', 'error');
                     this.handleLogout();
                     return;
                 }
@@ -186,7 +219,20 @@ export class AdminController {
             
             this.allRSVPs = data.results || [];
             console.log(`Total RSVPs: ${this.allRSVPs.length}`);
-            
+
+            if (typeof data.listedBlobCount === 'number' && data.listedBlobCount !== this.allRSVPs.length) {
+                const msg =
+                    `Loaded ${this.allRSVPs.length} RSVPs but blob store listed ${data.listedBlobCount} keys. ` +
+                    'Some blobs may be empty, invalid JSON, or failed to load.';
+                console.warn('⚠️ RSVP count mismatch:', msg, data.failedBlobLoads || '');
+                if (Array.isArray(data.failedBlobLoads) && data.failedBlobLoads.length > 0) {
+                    this.showToast(
+                        `${msg} (${data.failedBlobLoads.length} blob read(s) failed — see console.)`,
+                        'error'
+                    );
+                }
+            }
+
             this.applyFilters();
         } catch (error) {
             console.error('❌ Error loading RSVPs:', error);
@@ -197,12 +243,12 @@ export class AdminController {
                     <div style="padding: 40px; text-align: center; color: #dc3545;">
                         <p><strong>Error loading RSVPs</strong></p>
                         <p>${error.message}</p>
-                        <button onclick="adminController.loadRSVPs()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Retry</button>
+                        <button data-action="retry-load" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Retry</button>
                     </div>
                 `;
             }
             
-            alert(`Failed to load RSVPs: ${error.message}`);
+            this.showToast(`Failed to load RSVPs: ${error.message}`, 'error');
         }
     }
 
@@ -251,6 +297,38 @@ export class AdminController {
         this.displayRSVPs();
     }
 
+    async handleTableClick(event) {
+        const actionButton = event.target.closest('button[data-action]');
+        if (actionButton) {
+            const { action, rsvpId } = actionButton.dataset;
+            if (action === 'retry-load') {
+                await this.loadRSVPs();
+                return;
+            }
+
+            if (!rsvpId) return;
+            if (action === 'approve') await this.approveRSVP(rsvpId);
+            if (action === 'decline') await this.declineRSVP(rsvpId);
+            if (action === 'details') this.viewDetails(rsvpId);
+            if (action === 'delete') await this.deleteRSVP(rsvpId);
+            if (action === 'resend-approved') await this.resendApprovedEmail(rsvpId);
+            return;
+        }
+
+        const sortHeader = event.target.closest('th[data-sort]');
+        if (sortHeader) {
+            this.sortBy(sortHeader.dataset.sort);
+        }
+    }
+
+    handlePaginationClick(event) {
+        const pageButton = event.target.closest('button[data-page-action]');
+        if (!pageButton) return;
+
+        if (pageButton.dataset.pageAction === 'prev') this.previousPage();
+        if (pageButton.dataset.pageAction === 'next') this.nextPage();
+    }
+
     handleRowsPerPageChange() {
         const newRowsPerPage = parseInt(this.rowsPerPage.value) || 25;
         this.itemsPerPage = newRowsPerPage;
@@ -279,11 +357,11 @@ export class AdminController {
 
         let html = '<table class="rsvp-table">';
         html += '<thead><tr>';
-        html += '<th onclick="adminController.sortBy(\'name\')" style="cursor: pointer;">Name ⇅</th>';
-        html += '<th onclick="adminController.sortBy(\'email\')" style="cursor: pointer;">Email ⇅</th>';
-        html += '<th onclick="adminController.sortBy(\'attending\')" style="cursor: pointer;">Attending ⇅</th>';
+        html += '<th data-sort="name" style="cursor: pointer;">Name ⇅</th>';
+        html += '<th data-sort="email" style="cursor: pointer;">Email ⇅</th>';
+        html += '<th data-sort="attending" style="cursor: pointer;">Attending ⇅</th>';
         html += '<th>Guests</th>';
-        html += '<th onclick="adminController.sortBy(\'status\')" style="cursor: pointer;">Status ⇅</th>';
+        html += '<th data-sort="status" style="cursor: pointer;">Status ⇅</th>';
         html += '<th>Actions</th>';
         html += '</tr></thead><tbody>';
 
@@ -299,9 +377,11 @@ export class AdminController {
                 <td>${rsvp.guests || 1}</td>
                 <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
                 <td class="actions">
-                    ${rsvp.status !== 'approved' ? `<button onclick="adminController.approveRSVP('${rsvp.id}')">Approve</button>` : ''}
-                    ${rsvp.status !== 'declined' ? `<button onclick="adminController.declineRSVP('${rsvp.id}')">Decline</button>` : ''}
-                    <button onclick="adminController.viewDetails('${rsvp.id}')">Details</button>
+                    ${rsvp.status !== 'approved' ? `<button type="button" data-action="approve" data-rsvp-id="${rsvp.id}">Approve</button>` : ''}
+                    ${rsvp.status === 'approved' ? `<button type="button" data-action="resend-approved" data-rsvp-id="${rsvp.id}" title="Resend confirmation email">Resend</button>` : ''}
+                    ${rsvp.status !== 'declined' ? `<button type="button" data-action="decline" data-rsvp-id="${rsvp.id}">Decline</button>` : ''}
+                    <button type="button" data-action="details" data-rsvp-id="${rsvp.id}">Details</button>
+                    <button type="button" data-action="delete" data-rsvp-id="${rsvp.id}" style="background:#dc3545;color:#fff;">Delete</button>
                 </td>
             </tr>`;
         });
@@ -315,39 +395,38 @@ export class AdminController {
     async approveRSVP(rsvpId) {
         const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
         if (!rsvp) {
-            alert('RSVP not found');
+            this.showToast('RSVP not found', 'error');
             return;
         }
-        
-        // Prompt for optional admin message
-        const adminMessage = prompt(
-            `Send confirmation email to ${rsvp.name} (${rsvp.email})?\n\n` +
-            `(Optional) Add a personal message to include in the email:\n` +
-            `(Leave empty and click OK to send without a message)`,
-            ''
-        );
-        
+
+        const adminMessage = await this.openPromptModal({
+            title: 'Approve & send email',
+            message:
+                `Send confirmation email to ${rsvp.name} (${rsvp.email})?\n\n` +
+                'Optional: add a personal message for the email (leave empty to skip).',
+            placeholder: 'Personal message (optional)',
+            confirmText: 'Send email',
+            cancelText: 'Cancel'
+        });
+
         if (adminMessage === null) {
-            // User cancelled the prompt
             return;
         }
 
         console.log(`📧 Approving RSVP: ${rsvpId}`, adminMessage ? '(with message)' : '(no message)');
 
         try {
-            // Encode adminSecret to base64 to handle non-ASCII characters in headers
             const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
-            
+
             const requestBody = {
                 rsvpId: rsvpId,
                 status: 'Approved'
             };
-            
-            // Only include adminMessage if provided
+
             if (adminMessage && adminMessage.trim()) {
                 requestBody.adminMessage = adminMessage.trim();
             }
-            
+
             const response = await fetch('/.netlify/functions/send-confirmation', {
                 method: 'POST',
                 headers: {
@@ -364,66 +443,73 @@ export class AdminController {
                 throw new Error(responseData.error || `HTTP ${response.status}`);
             }
 
-            alert('✅ Confirmation email sent successfully!');
+            await this.showSuccessCheckModal('Done', 'Confirmation email sent.');
             await this.loadRSVPs();
         } catch (error) {
             console.error('❌ Error approving RSVP:', error);
-            alert(`Failed to approve RSVP: ${error.message}`);
+            this.showToast(`Failed to approve RSVP: ${error.message}`, 'error');
         }
     }
 
     async declineRSVP(rsvpId) {
         const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
         if (!rsvp) {
-            alert('RSVP not found');
+            this.showToast('RSVP not found', 'error');
             return;
         }
-        
-        // Determine if we need to ask for a reason
+
         const userWantedToAttend = rsvp.attending === 'yes';
         let declineReason = '';
-        
+
         if (userWantedToAttend) {
-            // User wanted to attend but admin is declining - ask for reason
-            const reason = prompt(
-                `This guest wanted to attend. Please provide a reason for declining their RSVP:\n\n` +
-                `(This reason will be included in the email sent to ${rsvp.name})`,
-                ''
-            );
-            
+            const reason = await this.openPromptModal({
+                title: 'Decline RSVP',
+                message:
+                    `This guest wanted to attend. Add an optional reason (shown in the email to ${rsvp.name}).`,
+                placeholder: 'Reason (optional)',
+                confirmText: 'Continue',
+                cancelText: 'Cancel'
+            });
+
             if (reason === null) {
-                // User cancelled the prompt
                 return;
             }
-            
+
             declineReason = reason.trim();
-            
-            if (!confirm(`Send decline email to ${rsvp.name} (${rsvp.email}) with the provided reason?`)) {
-                return;
-            }
+
+            const ok = await this.openConfirmModal({
+                title: 'Send decline email?',
+                message: `Send decline email to ${rsvp.name} (${rsvp.email})?`,
+                confirmText: 'Send email',
+                cancelText: 'Cancel',
+                danger: false
+            });
+            if (!ok) return;
         } else {
-            // User didn't want to attend - just confirm their choice
-            if (!confirm(`Send confirmation email to ${rsvp.name} (${rsvp.email}) confirming they won't be attending?`)) {
-                return;
-            }
+            const ok = await this.openConfirmModal({
+                title: 'Send confirmation?',
+                message: `Send confirmation email to ${rsvp.name} (${rsvp.email}) confirming they will not attend?`,
+                confirmText: 'Send email',
+                cancelText: 'Cancel',
+                danger: false
+            });
+            if (!ok) return;
         }
 
         console.log(`📧 Declining RSVP: ${rsvpId}`, userWantedToAttend ? '(user wanted to attend)' : '(user declined)');
 
         try {
-            // Encode adminSecret to base64 to handle non-ASCII characters in headers
             const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
-            
+
             const requestBody = {
                 rsvpId: rsvpId,
                 status: 'Declined'
             };
-            
-            // Only include declineReason if user wanted to attend
+
             if (userWantedToAttend && declineReason) {
                 requestBody.declineReason = declineReason;
             }
-            
+
             const response = await fetch('/.netlify/functions/send-confirmation', {
                 method: 'POST',
                 headers: {
@@ -440,11 +526,146 @@ export class AdminController {
                 throw new Error(responseData.error || `HTTP ${response.status}`);
             }
 
-            alert('✅ Decline email sent successfully!');
+            await this.showSuccessCheckModal('Done', 'Decline email sent.');
             await this.loadRSVPs();
         } catch (error) {
             console.error('❌ Error declining RSVP:', error);
-            alert(`Failed to decline RSVP: ${error.message}`);
+            this.showToast(`Failed to decline RSVP: ${error.message}`, 'error');
+        }
+    }
+
+    async resendApprovedEmail(rsvpId) {
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            this.showToast('RSVP not found', 'error');
+            return;
+        }
+        if (rsvp.status !== 'approved') {
+            this.showToast('Only approved RSVPs can resend the confirmation email.', 'error');
+            return;
+        }
+
+        const adminMessage = await this.openPromptModal({
+            title: 'Resend confirmation email',
+            message:
+                `Resend the approval email to ${rsvp.name} (${rsvp.email})?\n\n` +
+                'Optional: add or change a personal message for this send.',
+            placeholder: 'Personal message (optional)',
+            confirmText: 'Resend',
+            cancelText: 'Cancel'
+        });
+
+        if (adminMessage === null) return;
+
+        try {
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            const requestBody = {
+                rsvpId,
+                status: 'Approved',
+                resendOnly: true
+            };
+            if (adminMessage && adminMessage.trim()) {
+                requestBody.adminMessage = adminMessage.trim();
+            }
+
+            const response = await fetch('/.netlify/functions/send-confirmation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': encodedSecret
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            await this.showSuccessCheckModal('Done', 'Approval email resent.');
+            await this.loadRSVPs();
+        } catch (error) {
+            console.error('❌ Error resending email:', error);
+            this.showToast(`Failed to resend email: ${error.message}`, 'error');
+        }
+    }
+
+    async deleteRSVP(rsvpId) {
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            this.showToast('RSVP not found', 'error');
+            return;
+        }
+
+        const shouldDelete = await this.openConfirmModal({
+            title: 'Delete RSVP?',
+            message:
+                `Delete RSVP for ${rsvp.name} (${rsvp.email})?\n\n` +
+                'This permanently removes the record from storage.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            danger: true
+        });
+        if (!shouldDelete) return;
+
+        try {
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            const response = await fetch('/.netlify/functions/delete-rsvp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': encodedSecret
+                },
+                body: JSON.stringify({ rsvpId })
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            await this.showSuccessCheckModal('Deleted', 'RSVP removed from storage.');
+            await this.loadRSVPs();
+        } catch (error) {
+            console.error('❌ Error deleting RSVP:', error);
+            this.showToast(`Failed to delete RSVP: ${error.message}`, 'error');
+        }
+    }
+
+    async deleteRSVP(rsvpId) {
+        const rsvp = this.allRSVPs.find(r => r.id === rsvpId);
+        if (!rsvp) {
+            alert('RSVP not found');
+            return;
+        }
+
+        const shouldDelete = confirm(
+            `Delete RSVP for ${rsvp.name} (${rsvp.email})?\n\n` +
+            'This will permanently remove the RSVP from storage.'
+        );
+        if (!shouldDelete) return;
+
+        try {
+            const encodedSecret = btoa(unescape(encodeURIComponent(this.adminSecret)));
+            const response = await fetch('/.netlify/functions/delete-rsvp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': encodedSecret
+                },
+                body: JSON.stringify({ rsvpId })
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(responseData.error || `HTTP ${response.status}`);
+            }
+
+            alert('🗑️ RSVP deleted successfully');
+            await this.loadRSVPs();
+        } catch (error) {
+            console.error('❌ Error deleting RSVP:', error);
+            alert(`Failed to delete RSVP: ${error.message}`);
         }
     }
 
@@ -463,7 +684,7 @@ export class AdminController {
         details += `Status: ${rsvp.status}\n`;
         details += `Submitted: ${rsvp.submittedAt}`;
 
-        alert(details);
+        void this.openInfoModal({ title: 'Guest details', message: details });
     }
 
     updateStats() {
@@ -487,14 +708,14 @@ export class AdminController {
         
         if (!this.paginationControls) return;
 
-        let html = `Page ${this.currentPage} of ${totalPages} | `;
+        let html = `Page ${this.currentPage} of ${totalPages || 1} | `;
 
         if (this.currentPage > 1) {
-            html += `<button onclick="adminController.previousPage()">← Previous</button> `;
+            html += '<button data-page-action="prev">← Previous</button> ';
         }
 
         if (this.currentPage < totalPages) {
-            html += `<button onclick="adminController.nextPage()">Next →</button>`;
+            html += '<button data-page-action="next">Next →</button>';
         }
 
         this.paginationControls.innerHTML = html;
@@ -526,6 +747,202 @@ export class AdminController {
     }
 
     // ===========================
+    // MODAL & TOAST (no window.alert / confirm / prompt)
+    // ===========================
+
+    closeAdminModalVisual() {
+        if (this.modalRoot) this.modalRoot.hidden = true;
+        if (this.modalMessage) {
+            this.modalMessage.style.display = '';
+            this.modalMessage.style.whiteSpace = '';
+        }
+        if (this.modalTextarea) {
+            this.modalTextarea.style.display = 'none';
+            this.modalTextarea.value = '';
+        }
+        if (this.modalSuccess) {
+            this.modalSuccess.style.display = 'none';
+            this.modalSuccess.innerHTML = '';
+        }
+        if (this.modalCancel) this.modalCancel.style.display = '';
+        if (this.modalConfirm) this.modalConfirm.className = 'admin-modal-btn-primary';
+    }
+
+    finishAdminModal(value) {
+        if (this._successAutoCloseTimer) {
+            clearTimeout(this._successAutoCloseTimer);
+            this._successAutoCloseTimer = null;
+        }
+        const cb = this._modalFinish;
+        this._modalFinish = null;
+        this._modalMode = null;
+        this.closeAdminModalVisual();
+        if (cb) cb(value);
+    }
+
+    onAdminModalConfirm() {
+        if (!this.modalRoot || !this._modalMode) return;
+        if (this._modalMode === 'prompt') {
+            this.finishAdminModal(this.modalTextarea ? this.modalTextarea.value : '');
+            return;
+        }
+        this.finishAdminModal(true);
+    }
+
+    showToast(message, variant = 'success') {
+        if (!this.toastStack) return;
+        const toast = document.createElement('div');
+        toast.className = `admin-toast admin-toast--${variant}`;
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'admin-toast__icon';
+        if (variant === 'success') {
+            iconWrap.innerHTML =
+                '<svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">' +
+                '<circle class="admin-check-ring" cx="16" cy="16" r="10"/>' +
+                '<path class="admin-check-mark" d="M10 16l4 4 8-8"/>' +
+                '</svg>';
+        } else {
+            iconWrap.textContent = '!';
+            iconWrap.style.cssText =
+                'font-weight:700;color:#dc3545;font-size:1.1rem;line-height:28px;text-align:center;';
+        }
+        const text = document.createElement('div');
+        text.className = 'admin-toast__text';
+        text.textContent = message;
+        toast.appendChild(iconWrap);
+        toast.appendChild(text);
+        this.toastStack.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('admin-toast--visible'));
+        setTimeout(() => {
+            toast.classList.remove('admin-toast--visible');
+            setTimeout(() => toast.remove(), 280);
+        }, 3800);
+    }
+
+    openConfirmModal({ title, message, confirmText = 'OK', cancelText = 'Cancel', danger = false }) {
+        return new Promise(resolve => {
+            if (!this.modalRoot) {
+                resolve(false);
+                return;
+            }
+            this._modalMode = 'confirm';
+            this._modalFinish = resolve;
+            if (this.modalTitle) this.modalTitle.textContent = title;
+            if (this.modalMessage) {
+                this.modalMessage.style.display = '';
+                this.modalMessage.style.whiteSpace = 'pre-wrap';
+                this.modalMessage.textContent = message;
+            }
+            if (this.modalTextarea) this.modalTextarea.style.display = 'none';
+            if (this.modalSuccess) this.modalSuccess.style.display = 'none';
+            if (this.modalCancel) {
+                this.modalCancel.style.display = '';
+                this.modalCancel.textContent = cancelText;
+            }
+            if (this.modalConfirm) {
+                this.modalConfirm.textContent = confirmText;
+                this.modalConfirm.className = danger ? 'admin-modal-btn-danger' : 'admin-modal-btn-primary';
+            }
+            this.modalRoot.hidden = false;
+        });
+    }
+
+    openPromptModal({ title, message, placeholder = '', confirmText = 'OK', cancelText = 'Cancel' }) {
+        return new Promise(resolve => {
+            if (!this.modalRoot) {
+                resolve(null);
+                return;
+            }
+            this._modalMode = 'prompt';
+            this._modalFinish = resolve;
+            if (this.modalTitle) this.modalTitle.textContent = title;
+            if (this.modalMessage) {
+                this.modalMessage.style.display = '';
+                this.modalMessage.style.whiteSpace = 'pre-wrap';
+                this.modalMessage.textContent = message;
+            }
+            if (this.modalTextarea) {
+                this.modalTextarea.style.display = '';
+                this.modalTextarea.value = '';
+                this.modalTextarea.placeholder = placeholder;
+            }
+            if (this.modalSuccess) this.modalSuccess.style.display = 'none';
+            if (this.modalCancel) {
+                this.modalCancel.style.display = '';
+                this.modalCancel.textContent = cancelText;
+            }
+            if (this.modalConfirm) {
+                this.modalConfirm.textContent = confirmText;
+                this.modalConfirm.className = 'admin-modal-btn-primary';
+            }
+            this.modalRoot.hidden = false;
+            requestAnimationFrame(() => this.modalTextarea?.focus());
+        });
+    }
+
+    openInfoModal({ title, message }) {
+        return new Promise(resolve => {
+            if (!this.modalRoot) {
+                resolve();
+                return;
+            }
+            this._modalMode = 'alert';
+            this._modalFinish = () => resolve();
+            if (this.modalTitle) this.modalTitle.textContent = title;
+            if (this.modalMessage) {
+                this.modalMessage.style.display = '';
+                this.modalMessage.style.whiteSpace = 'pre-wrap';
+                this.modalMessage.textContent = message;
+            }
+            if (this.modalTextarea) this.modalTextarea.style.display = 'none';
+            if (this.modalSuccess) this.modalSuccess.style.display = 'none';
+            if (this.modalCancel) this.modalCancel.style.display = 'none';
+            if (this.modalConfirm) {
+                this.modalConfirm.textContent = 'Close';
+                this.modalConfirm.className = 'admin-modal-btn-primary';
+            }
+            this.modalRoot.hidden = false;
+        });
+    }
+
+    showSuccessCheckModal(title, subtitle) {
+        return new Promise(resolve => {
+            if (!this.modalRoot) {
+                resolve();
+                return;
+            }
+            this._modalMode = 'success';
+            this._modalFinish = () => resolve();
+            if (this.modalTitle) this.modalTitle.textContent = title;
+            if (this.modalMessage) this.modalMessage.style.display = 'none';
+            if (this.modalTextarea) this.modalTextarea.style.display = 'none';
+            if (this.modalCancel) this.modalCancel.style.display = 'none';
+            if (this.modalConfirm) {
+                this.modalConfirm.textContent = 'OK';
+                this.modalConfirm.className = 'admin-modal-btn-primary';
+            }
+            if (this.modalSuccess) {
+                this.modalSuccess.style.display = 'block';
+                this.modalSuccess.innerHTML =
+                    '<div class="admin-success-check-wrap">' +
+                    '<svg viewBox="0 0 72 72" aria-hidden="true">' +
+                    '<circle class="admin-check-ring" cx="36" cy="36" r="22"/>' +
+                    '<path class="admin-check-mark" d="M22 38l10 10 20-28"/>' +
+                    '</svg>' +
+                    '<p></p>' +
+                    '</div>';
+                const p = this.modalSuccess.querySelector('p');
+                if (p) p.textContent = subtitle;
+            }
+            this.modalRoot.hidden = false;
+            this._successAutoCloseTimer = setTimeout(() => {
+                this._successAutoCloseTimer = null;
+                this.finishAdminModal(true);
+            }, 2400);
+        });
+    }
+
+    // ===========================
     // UTILITIES
     // ===========================
 
@@ -541,18 +958,15 @@ export class AdminController {
     }
 }
 
-// Global instance for HTML onclick handlers
-let adminController;
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    adminController = new AdminController();
+    const adminController = new AdminController();
     adminController.init();
 });
 
 // Cleanup auto-refresh when page is unloaded
 window.addEventListener('beforeunload', function() {
-    if (adminController) {
-        adminController.stopAutoRefresh();
+    if (window.adminController) {
+        window.adminController.stopAutoRefresh();
     }
 });

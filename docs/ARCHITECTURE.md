@@ -194,7 +194,7 @@ exports.handler = async (event, context) => {
    ↓
 7. AdminController calls send-confirmation.js (Serverless Function)
    ↓
-8. Serverless function sends email via SendGrid and updates RSVP status
+8. Serverless function sends email via Brevo and updates RSVP status
    ↓
 9. AdminController refreshes View (updates table)
 ```
@@ -283,7 +283,7 @@ class AdminController {
 **Where stored:**
 - Netlify Blobs (RSVP data)
 - Environment variables (configuration)
-- SendGrid (email delivery status)
+- Brevo (email delivery status)
 
 ---
 

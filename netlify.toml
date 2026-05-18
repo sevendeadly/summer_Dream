@@ -10,7 +10,7 @@
   #   of files/paths or secret key names to exclude from scanning.
   SECRETS_SCAN_ENABLED = "true"
   SECRETS_SCAN_OMIT_PATHS = ".env.example,env,docs"
-  SECRETS_SCAN_OMIT_KEYS = "NOTION_API_KEY,SENDGRID_API_KEY,ADMIN_SECRET"
+  SECRETS_SCAN_OMIT_KEYS = "NOTION_API_KEY,BREVO_API_KEY,ADMIN_SECRET"
 
 
 [[redirects]]

@@ -51,7 +51,7 @@ This document provides a comprehensive index of all documentation available for 
 **Contents:**
 - Prerequisites
 - Environment variable setup
-- SendGrid configuration
+- Brevo configuration
 - Netlify deployment
 - Testing procedures
 - Troubleshooting
@@ -92,7 +92,7 @@ This document provides a comprehensive index of all documentation available for 
 **Purpose:** Email system documentation  
 **Audience:** Administrators, developers  
 **Contents:**
-- SendGrid setup
+- Brevo setup
 - Email template structure
 - Template customization
 - Email workflow
@@ -209,7 +209,7 @@ This document provides a comprehensive index of all documentation available for 
 
 **Configure email system:**
 1. Read [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md)
-2. Follow SendGrid setup in [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md)
+2. Follow Brevo setup in [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md)
 
 **Use the admin dashboard:**
 1. Read [RSVP_SYSTEM.md](RSVP_SYSTEM.md)
@@ -336,7 +336,7 @@ This document provides a comprehensive index of all documentation available for 
 2. **Check Logs:**
    - Netlify function logs
    - Browser console
-   - SendGrid activity feed
+   - Brevo transactional activity logs
 
 3. **Review Code:**
    - Check inline comments

@@ -44,6 +44,7 @@ npm install @notionhq/client nodemailer
 ```
 
 This installs:
+
 - **@notionhq/client** - Notion API client
 - **nodemailer** - Email sending library
 
@@ -73,13 +74,6 @@ Your `package.json` should have:
 NOTION_API_KEY=secret_your_api_key_here
 NOTION_DATABASE_ID=your_database_id_here
 
-# Email Configuration (Gmail)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-16-char-app-password
-ADMIN_EMAIL=your-email@gmail.com
-
 # Security
 ADMIN_SECRET=your-secure-admin-password-here
 ```
@@ -99,27 +93,14 @@ ADMIN_SECRET=your-secure-admin-password-here
 3. Extract the `DATABASE_ID` part (long string)
 4. Share the database with your integration (click "Share" → select integration)
 
-### 2.4 Set Up Gmail SMTP
 
-1. Go to [Google Account](https://myaccount.google.com/)
-2. Enable **2-Factor Authentication**
-3. Go to [App Passwords](https://myaccount.google.com/apppasswords)
-4. Select "Mail" and "Other (Custom name)"
-5. Name it "Wedding Website"
-6. Copy the **16-character password**
-7. Paste into `EMAIL_PASS`
 
-### Alternative Email Services
+**Brevo (current project default):**
 
-**SendGrid:**
+```bash
+BREVO_API_KEY=xkeysib-your-api-key
+BREVO_FROM_EMAIL=noreply@yourwedding.com
 ```
-EMAIL_HOST=smtp.sendgrid.net
-EMAIL_PORT=587
-EMAIL_USER=apikey
-EMAIL_PASS=your-sendgrid-api-key
-```
-
-
 
 ---
 
@@ -129,17 +110,19 @@ EMAIL_PASS=your-sendgrid-api-key
 
 Create a new Notion database with these columns:
 
-| Column | Type | Options |
-|--------|------|---------|
-| **Name** | Title | - |
-| **Email** | Email | - |
-| **Phone** | Phone Number | - |
-| **Attending** | Select | "yes", "no" |
-| **Guests** | Number | - |
-| **Dietary** | Text | - |
-| **Message** | Text | - |
-| **Submitted At** | Date | - |
-| **Status** | Select | "Pending Review", "Approved", "Declined" |
+
+| Column           | Type         | Options                                  |
+| ---------------- | ------------ | ---------------------------------------- |
+| **Name**         | Title        | -                                        |
+| **Email**        | Email        | -                                        |
+| **Phone**        | Phone Number | -                                        |
+| **Attending**    | Select       | "yes", "no"                              |
+| **Guests**       | Number       | -                                        |
+| **Dietary**      | Text         | -                                        |
+| **Message**      | Text         | -                                        |
+| **Submitted At** | Date         | -                                        |
+| **Status**       | Select       | "Pending Review", "Approved", "Declined" |
+
 
 ### 3.2 Record Format Example
 
@@ -173,6 +156,7 @@ controllers/netlify-func/
 ### 4.2 Function Endpoints
 
 **Submit RSVP**
+
 ```
 POST /.netlify/functions/submit-rsvp
 Body: { name, email, phone, attending, guests, dietary, message }
@@ -180,6 +164,7 @@ Response: { success, message }
 ```
 
 **Send Confirmation**
+
 ```
 POST /.netlify/functions/send-confirmation
 Headers: { X-Admin-Secret }
@@ -188,6 +173,7 @@ Response: { success, message }
 ```
 
 **Get RSVPs**
+
 ```
 GET /.netlify/functions/get-rsvps
 Headers: { X-Admin-Secret }
@@ -239,15 +225,13 @@ File: `netlify.toml`
 ```
 NOTION_API_KEY: secret_abc123...
 NOTION_DATABASE_ID: abc123def456...
-EMAIL_HOST: smtp.gmail.com
-EMAIL_PORT: 587
-EMAIL_USER: your-email@gmail.com
-EMAIL_PASS: your-app-password
 ADMIN_EMAIL: your-email@gmail.com
 ADMIN_SECRET: your-secure-password
+BREVO_API_KEY=xkeysib-your-api-key
+BREVO_FROM_EMAIL=noreply@yourwedding.com
 ```
 
-4. Trigger redeploy for changes to take effect
+1. Trigger redeploy for changes to take effect
 
 ### 5.3 Test Deployment
 
@@ -285,22 +269,26 @@ https://your-site.netlify.app/admin
 ### 6.3 Dashboard Features
 
 **Statistics Panel**
+
 - Total RSVPs received
 - Guests attending
 - Pending approvals
 
 **Filter & Search**
+
 - Filter by attending status (yes/no)
 - Filter by approval status
 - Search by name or email
 
 **RSVP Actions**
+
 - **View Details** - See full guest information
 - **Approve** - Send confirmation email (marks as "Approved")
 - **Decline** - Send decline email (marks as "Declined")
 - **Refresh** - Reload RSVPs from Notion
 
 **Sorting**
+
 - Click column headers to sort
 - Name, email, status, etc.
 
@@ -361,12 +349,14 @@ const emailContent = `
 ### 8.1 API Key Protection
 
 ✅ **DO:**
+
 - Store keys in environment variables
 - Use serverless functions for API calls
 - Rotate keys periodically
 - Use read-only access where possible
 
 ❌ **DON'T:**
+
 - Hardcode keys in JavaScript
 - Commit `.env` files
 - Share keys via email
@@ -375,12 +365,14 @@ const emailContent = `
 ### 8.2 Admin Secret
 
 Your `ADMIN_SECRET` is:
+
 - ✅ Stored in Netlify environment variables
 - ✅ Transmitted via HTTPS only
 - ✅ Required for all admin functions
 - ⚠️ Change it if compromised
 
 Generate a strong admin secret:
+
 ```bash
 # Generate secure password
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -401,6 +393,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### Issue: "Notion API Key Invalid"
 
 **Solution:**
+
 1. Verify key format: `secret_` prefix required
 2. Check integration is shared with database
 3. Ensure database ID is correct
@@ -409,6 +402,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### Issue: "Email Not Sending"
 
 **Solution:**
+
 1. Check email credentials in Netlify
 2. Verify SMTP server and port settings
 3. Check email account settings (2FA enabled)
@@ -418,6 +412,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### Issue: "Admin Dashboard Not Loading"
 
 **Solution:**
+
 1. Clear browser cache and localStorage
 2. Verify admin secret is correct
 3. Check browser console for errors
@@ -427,6 +422,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### Issue: "RSVP Not Appearing in Notion"
 
 **Solution:**
+
 1. Verify database structure matches expectations
 2. Check function logs for errors
 3. Ensure database is shared with integration
@@ -440,6 +436,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### 10.1 Track Responses
 
 **In Admin Dashboard:**
+
 - View real-time RSVP count
 - Monitor acceptance rate
 - Track dietary restrictions
@@ -448,6 +445,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### 10.2 Export Data
 
 **From Notion:**
+
 1. Select all RSVPs
 2. Click "..." menu
 3. Choose "Download as CSV"
@@ -456,6 +454,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### 10.3 Netlify Analytics
 
 **Monitor Functions:**
+
 1. Netlify Dashboard → Functions tab
 2. View function logs
 3. Monitor execution time
@@ -467,32 +466,34 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Before going live:
 
-- [ ] Notion API key obtained and verified
-- [ ] Notion database created with correct structure
-- [ ] Database shared with integration
-- [ ] Gmail 2FA enabled (or email service set up)
-- [ ] Environment variables set in Netlify
-- [ ] Functions deployed successfully
-- [ ] Admin dashboard accessible at `/admin`
-- [ ] Test RSVP submission end-to-end
-- [ ] Test email sending
-- [ ] Verify emails look good on mobile
-- [ ] Test admin dashboard functionality
-- [ ] Admin secret saved securely
-- [ ] Test decline functionality
-- [ ] Backup Notion database
-- [ ] Share dashboard access with partner (if needed)
+- Notion API key obtained and verified
+- Notion database created with correct structure
+- Database shared with integration
+- Gmail 2FA enabled (or email service set up)
+- Environment variables set in Netlify
+- Functions deployed successfully
+- Admin dashboard accessible at `/admin`
+- Test RSVP submission end-to-end
+- Test email sending
+- Verify emails look good on mobile
+- Test admin dashboard functionality
+- Admin secret saved securely
+- Test decline functionality
+- Backup Notion database
+- Share dashboard access with partner (if needed)
 
 ---
 
 ## 📞 Getting Help
 
 ### Common Resources
+
 - [Netlify Docs](https://docs.netlify.com/)
 - [Notion API](https://developers.notion.com/)
 - [Nodemailer](https://nodemailer.com/)
 
 ### Debug Steps
+
 1. Check Netlify function logs: Dashboard → Functions → View logs
 2. Check browser console: F12 → Console tab
 3. Verify environment variables in Netlify
@@ -500,8 +501,9 @@ Before going live:
 5. Review error messages carefully
 
 ### Contact Support
-- Netlify Support: https://app.netlify.com/support
-- Notion Support: https://notion.so/help
+
+- Netlify Support: [https://app.netlify.com/support](https://app.netlify.com/support)
+- Notion Support: [https://notion.so/help](https://notion.so/help)
 - GitHub Issues: Create issue in repository
 
 ---
@@ -511,6 +513,7 @@ Before going live:
 Your wedding website now has a complete email confirmation system. Your guests can RSVP with one click, and you can manage responses beautifully!
 
 **Next Steps:**
+
 1. Customize email templates to match your brand
 2. Share admin dashboard link with your partner
 3. Test the system thoroughly

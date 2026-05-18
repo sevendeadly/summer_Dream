@@ -6,6 +6,128 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../assets/css/styles.css">
     <title>RSVP Admin Dashboard</title>
+    <style>
+        .admin-toast-stack {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: min(360px, calc(100vw - 2rem));
+            pointer-events: none;
+        }
+        .admin-toast {
+            pointer-events: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: 0.85rem 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            border-left: 4px solid #28a745;
+        }
+        .admin-toast--error { border-left-color: #dc3545; }
+        .admin-toast--visible { opacity: 1; transform: translateY(0); }
+        .admin-toast__icon { flex-shrink: 0; width: 28px; height: 28px; margin-top: 2px; }
+        .admin-toast__text { font-size: 0.9rem; line-height: 1.4; color: #333; }
+        .admin-check-ring {
+            stroke: #28a745;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: admin-check-ring-draw 0.45s ease forwards;
+        }
+        .admin-check-mark {
+            stroke: #28a745;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 24;
+            stroke-dashoffset: 24;
+            animation: admin-check-mark-draw 0.35s 0.35s ease forwards;
+        }
+        @keyframes admin-check-ring-draw { to { stroke-dashoffset: 0; } }
+        @keyframes admin-check-mark-draw { to { stroke-dashoffset: 0; } }
+
+        .admin-modal-root[hidden] { display: none !important; }
+        .admin-modal-root {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .admin-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+        }
+        .admin-modal-card {
+            position: relative;
+            background: #fff;
+            border-radius: 12px;
+            max-width: 420px;
+            width: 100%;
+            padding: 1.35rem 1.5rem;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+            animation: admin-modal-pop 0.22s ease;
+        }
+        @keyframes admin-modal-pop {
+            from { opacity: 0; transform: scale(0.96) translateY(6px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .admin-modal-card h2 { margin: 0 0 0.5rem; font-size: 1.15rem; color: #333; }
+        .admin-modal-card p { margin: 0 0 1rem; color: #555; font-size: 0.95rem; line-height: 1.45; }
+        .admin-modal-card textarea {
+            width: 100%;
+            min-height: 88px;
+            margin-bottom: 1rem;
+            padding: 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+        .admin-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+        .admin-modal-actions button {
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .admin-modal-btn-secondary { background: #e9ecef; color: #333; }
+        .admin-modal-btn-primary { background: var(--primary-color, #d4a5a5); color: #fff; }
+        .admin-modal-btn-danger { background: #dc3545; color: #fff; }
+        .admin-success-check-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+        .admin-success-check-wrap svg { width: 72px; height: 72px; margin-bottom: 0.75rem; }
+        .admin-success-check-wrap p { margin: 0; color: #555; font-size: 0.95rem; }
+        .admin-success-check-wrap .admin-check-ring {
+            stroke-dasharray: 140;
+            stroke-dashoffset: 140;
+        }
+        .admin-success-check-wrap .admin-check-mark {
+            stroke-dasharray: 60;
+            stroke-dashoffset: 60;
+        }
+    </style>
 </head>
 <body class="admin-page">
     <nav class="navbar">
@@ -45,7 +167,7 @@
                     <h3>Total RSVPs</h3>
                     <div class="number" id="stats-total">0</div>
                 </div>
-                <div display: none; class="stat-card">
+                <div class="stat-card" style="display: none;">
                     <h3>Attending</h3>
                     <div class="number" id="stats-attending">0</div>
                 </div>
@@ -88,20 +210,24 @@
         </div>
     </section>
 
-    <!-- Modal for viewing details -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="document.getElementById('modal').style.display='none'">&times;</span>
-            <div id="modal-body"></div>
+    <div id="admin-toast-stack" class="admin-toast-stack" aria-live="polite"></div>
+
+    <div id="admin-modal-root" class="admin-modal-root" hidden>
+        <div class="admin-modal-backdrop" data-admin-modal-dismiss="true"></div>
+        <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+            <h2 id="admin-modal-title"></h2>
+            <p id="admin-modal-message"></p>
+            <textarea id="admin-modal-textarea" style="display:none;" placeholder=""></textarea>
+            <div id="admin-modal-success" style="display:none;"></div>
+            <div class="admin-modal-actions" id="admin-modal-actions">
+                <button type="button" class="admin-modal-btn-secondary" id="admin-modal-cancel">Cancel</button>
+                <button type="button" class="admin-modal-btn-primary" id="admin-modal-confirm">OK</button>
+            </div>
         </div>
     </div>
 
     <!-- Import Admin Controller -->
-    <script type="module">
-        import { AdminController } from '../controllers/admin.js';
-        window.adminController = new AdminController();
-        window.adminController.init();
-    </script>
+    <script type="module" src="../controllers/admin.js"></script>
 </body>
 </html>
 
