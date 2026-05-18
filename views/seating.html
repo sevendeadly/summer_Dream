@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <title>Find Your Table</title>
+</head>
+<body class="seating-page">
+    <header class="seating-header">
+        <h1 data-i18n="seating.title">Find Your Table</h1>
+        <p data-i18n="seating.subtitle">Enter your name as it appears on your invitation</p>
+        <div class="seating-lang-bar" aria-label="Language">
+            <div class="language-switcher seating-lang-switcher">
+                <button type="button" class="lang-btn" aria-label="Language Switcher">
+                    <span class="lang-icon">🌐</span>
+                    <span class="lang-current">EN</span>
+                </button>
+                <div class="lang-dropdown">
+                    <button type="button" class="lang-option active" data-lang="en"><span class="lang-flag">🇬🇧</span><span>English</span></button>
+                    <button type="button" class="lang-option" data-lang="fr"><span class="lang-flag">🇫🇷</span><span>Français</span></button>
+                    <button type="button" class="lang-option" data-lang="de"><span class="lang-flag">🇩🇪</span><span>Deutsch</span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="seating-main">
+        <form id="seating-lookup-form" class="seating-form" autocomplete="name">
+            <label for="guest-name" data-i18n="seating.nameLabel">Your name</label>
+            <input
+                type="text"
+                id="guest-name"
+                name="name"
+                required
+                data-i18n-placeholder="seating.namePlaceholder"
+                placeholder="e.g. Marie Pete"
+            >
+            <button type="submit" class="btn btn-submit" data-i18n="seating.findTable">Find my table</button>
+            <p id="seating-error" class="seating-error" hidden role="alert"></p>
+        </form>
+    </main>
+
+    <div id="seating-modal-root" class="seating-modal-root" hidden>
+        <div class="seating-modal-backdrop" data-seating-dismiss="true"></div>
+        <div class="seating-modal-card" role="dialog" aria-modal="true" aria-labelledby="seating-modal-title">
+            <h2 id="seating-modal-title" data-i18n="seating.welcomeTitle">Welcome</h2>
+            <p id="seating-modal-message"></p>
+            <button type="button" class="btn btn-submit seating-modal-close" data-i18n="seating.close">Close</button>
+        </div>
+    </div>
+
+    <div id="seating-picker-root" class="seating-modal-root" hidden>
+        <div class="seating-modal-backdrop" data-seating-dismiss="true"></div>
+        <div class="seating-modal-card" role="dialog" aria-modal="true" aria-labelledby="seating-picker-title">
+            <h2 id="seating-picker-title" data-i18n="seating.ambiguousTitle">Which guest are you?</h2>
+            <p data-i18n="seating.ambiguousHint">We found several matches. Please select your name:</p>
+            <ul id="seating-picker-list" class="seating-picker-list"></ul>
+            <button type="button" class="btn btn-submit seating-modal-close" data-seating-dismiss="true" data-i18n="seating.cancel">Cancel</button>
+        </div>
+    </div>
+
+    <footer class="seating-footer">
+        <p>&copy; 2026 Audrey & Josue-Daniel</p>
+    </footer>
+
+    <script type="module" src="../app.js"></script>
+</body>
+</html>
