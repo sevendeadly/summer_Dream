@@ -34,6 +34,7 @@ npm install
 ```
 
 This installs:
+
 - `@netlify/blobs` - For data storage
 - `@getbrevo/brevo` - For email delivery
 
@@ -68,6 +69,7 @@ cp .env.example .env
    - This is the email that will send confirmations
 
 4. **Update `.env` File**
+
    ```bash
    BREVO_API_KEY=xkeysib-your-api-key-here
    BREVO_FROM_EMAIL=your-verified-email@domain.com
@@ -89,6 +91,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 Add to `.env`:
+
 ```bash
 ADMIN_SECRET=your_secure_random_string_here
 ```
@@ -162,6 +165,7 @@ netlify dev
 ```
 
 This:
+
 - Starts a local server (usually `http://localhost:8888`)
 - Loads environment variables from `.env`
 - Simulates Netlify Functions locally
@@ -196,6 +200,7 @@ netlify init
 ```
 
 Follow the prompts:
+
 - Create & configure a new site
 - Choose your team
 - Build command: (leave empty, we're using static files)
@@ -207,9 +212,10 @@ Follow the prompts:
 2. Select your site
 3. Go to **Site Settings** → **Environment Variables**
 4. Add each variable from your `.env` file:
-  - `BREVO_API_KEY`
-  - `BREVO_FROM_EMAIL`
-   - `ADMIN_SECRET`
+
+- `BREVO_API_KEY`
+- `BREVO_FROM_EMAIL`
+- `ADMIN_SECRET`
 
 ### 5.3 Deploy
 
@@ -218,6 +224,7 @@ netlify deploy --prod
 ```
 
 Or connect your GitHub repository for automatic deployments:
+
 1. Go to Netlify Dashboard → **Site Settings** → **Build & Deploy**
 2. Click **Link to Git provider**
 3. Select your repository
@@ -274,6 +281,7 @@ Or connect your GitHub repository for automatic deployments:
 **Symptoms:** Form submission returns error
 
 **Solutions:**
+
 1. Check Netlify function logs for errors
 2. Verify Netlify Blobs is enabled (should be automatic)
 3. Check environment variables are set
@@ -284,6 +292,7 @@ Or connect your GitHub repository for automatic deployments:
 **Symptoms:** No emails received after approving RSVP
 
 **Solutions:**
+
 1. Check Brevo API key is correct
 2. Verify sender email is verified in Brevo
 3. Check Brevo account status (not suspended)
@@ -295,6 +304,7 @@ Or connect your GitHub repository for automatic deployments:
 **Symptoms:** Dashboard shows error or doesn't load RSVPs
 
 **Solutions:**
+
 1. Verify `ADMIN_SECRET` is set in Netlify
 2. Check browser console for errors
 3. Verify admin secret matches between `.env` and Netlify
@@ -305,6 +315,7 @@ Or connect your GitHub repository for automatic deployments:
 **Symptoms:** Functions return 502 Bad Gateway
 
 **Solutions:**
+
 1. Check function code for syntax errors
 2. Verify all dependencies are in `package.json`
 3. Check function logs for runtime errors
