@@ -1,5 +1,7 @@
 # Security Best Practices
 
+**Version:** 2.2.0
+
 This guide covers security considerations for the wedding website.
 
 ## 🔐 Critical Security Rules

@@ -1,6 +1,8 @@
 # Wedding Website Deployment Guide
 
-This guide will walk you through deploying your wedding website to GitHub Pages for **FREE** hosting.
+**Version:** 2.2.0
+
+This guide covers deploying the wedding website to **Netlify** (recommended). The site uses Netlify Functions for RSVP storage and Brevo for email.
 
 ## ✅ Prerequisites
 
@@ -94,11 +96,17 @@ Edit `styles.css` to switch between 3 color themes:
 
 To change palette, uncomment the desired palette in `styles.css` (around line 8-30).
 
-### 3. Set Up Notion Integration (Optional)
+### 3. Configure environment variables (required for RSVP & email)
 
-To receive RSVP submissions in Notion:
+On Netlify: **Site settings → Environment variables**. See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the full list (`BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `ADMIN_EMAIL`, `ADMIN_SECRET`, optional `RSVP_DEADLINE`).
 
-1. Create a Notion account at [notion.so](https://notion.so)
+> **Note:** GitHub Pages alone cannot run Netlify Functions. Use Netlify (or another serverless host) for RSVP and email features.
+
+### Legacy: Notion (removed in v2.1+)
+
+RSVP data is stored in **Netlify Blobs**, not Notion. The following Notion steps are obsolete:
+
+1. ~~Create a Notion account at [notion.so](https://notion.so)~~
 2. Create a new database with these columns:
    - Name (Title)
    - Email (Email)
@@ -126,7 +134,7 @@ To receive RSVP submissions in Notion:
    - The Database ID is `xxxxxxxxxx` (32 characters)
 
 6. **For production**: Create a serverless function to handle Notion API calls securely
-   - See `NOTION_INTEGRATION.md` for detailed instructions
+   - See [RSVP_SYSTEM.md](RSVP_SYSTEM.md) for the current RSVP stack
 
 ## 📱 Generate QR Code
 
@@ -273,7 +281,7 @@ Your wedding website is now live and ready to share with your guests!
 - ✅ Update payment links
 - ✅ Add your venue details
 - ✅ Test RSVP form
-- ✅ Set up Notion integration (if using)
+- ✅ Configure Netlify environment variables (Brevo, admin secret, RSVP deadline)
 - ✅ Generate QR code
 
 ---

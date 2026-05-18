@@ -1,6 +1,8 @@
 # RSVP Storage & Management System
 
-**Complete guide to the RSVP system using Netlify storage (replacing Notion).**
+**Complete guide to the RSVP system using Netlify Blob Storage and Brevo email confirmations.**
+
+**Version:** 2.2.0
 
 ---
 
@@ -34,6 +36,19 @@ The RSVP system now stores data using **Netlify Blob Storage** (or alternative J
 3. **Admin Review** - Dashboard for approving/declining RSVPs
 4. **Email Workflow** - Automated confirmations via Brevo
 5. **Data Storage** - Persistent storage via Netlify Blob or JSON backup
+
+### RSVP deadline (v2.2.0+)
+
+Public RSVP submissions are **closed** after **May 1, 2026** (end of day, Europe/Paris).
+
+| Layer | Behavior |
+|-------|----------|
+| **Client** | `RSVPController` hides the form and shows a translated closed message |
+| **Server** | `submit-rsvp` returns `403` when past the deadline |
+| **Config** | `models/config.js` → `RSVP_DEADLINE_ISO` / `isRsvpOpen()` |
+| **Env** | `RSVP_DEADLINE` on Netlify (optional override) |
+
+The admin dashboard continues to manage RSVPs submitted before the deadline.
 
 ---
 
@@ -95,6 +110,9 @@ BREVO_FROM_EMAIL=noreply@yourwedding.com     # Verified sender email
 ADMIN_EMAIL=your-email@example.com         # Where admin notifications go
 ADMIN_SECRET=strong-random-password        # Admin dashboard auth
 
+# RSVP deadline (optional; default May 1, 2026 end of day Paris)
+RSVP_DEADLINE=2026-05-01T23:59:59.999+02:00
+
 # Netlify Blob Storage (if using)
 # (Auto-configured, no manual setup needed)
 ```
@@ -147,12 +165,22 @@ Content-Type: application/json
 }
 ```
 
-**Error:**
+**Validation error:**
 
 ```json
 {
   "success": false,
   "error": "Email is required"
+}
+```
+
+**Deadline passed (403):**
+
+```json
+{
+  "success": false,
+  "error": "RSVP deadline has passed",
+  "message": "The RSVP deadline was May 1, 2026. We are no longer accepting responses."
 }
 ```
 

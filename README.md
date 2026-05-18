@@ -1,4 +1,4 @@
-# J-D & A-N Wedding Website - Production Release v2.1.0
+# J-D & A-N Wedding Website - Production Release v2.2.0
 
 > A modern, full-featured wedding website with RSVP management, email confirmations, admin dashboard, and multi-language support. Built with clean MVC architecture and deployed on Netlify.
 
@@ -7,7 +7,7 @@
 This is a production-ready wedding website featuring a complete RSVP system with email confirmations, an admin dashboard for managing guest responses, and a beautiful, responsive design. The system uses Netlify Blobs for data storage and Brevo for email delivery.
 
 **Wedding Date:** June 12, 2026  
-**Version:** 2.1.0 (Production Release)  
+**Version:** 2.2.0  
 **Architecture:** MVC (Model-View-Controller)  
 **Deployment:** Netlify
 
@@ -19,10 +19,10 @@ This is a production-ready wedding website featuring a complete RSVP system with
 - **🏠 Home Page** - Elegant landing page with real-time countdown timer
 - **📋 Wedding Info** - Comprehensive venue details, schedule, dress code, and FAQ
 - **🎁 Gift Registry** - Multiple payment options (PayPal, Wise, Bank Transfer, Wero)
-- **✉️ RSVP System** - Complete RSVP management with email confirmations
+- **✉️ RSVP System** - Guest submissions (closed after May 1, 2026 deadline) with admin review and email confirmations
 - **📸 Photo Albums** - Date-based visibility (hidden until after wedding)
 - **🎨 Theme System** - 3 color palettes with persistent theme switching
-- **🌐 Multi-Language** - Internationalization support (English/French)
+- **🌐 Multi-Language** - Auto-detect locale (EN/FR/DE) with manual override for France, USA, Canada, Cameroon, and Germany
 - **📱 Fully Responsive** - Optimized for all devices
 
 ### RSVP & Admin Features
@@ -71,7 +71,8 @@ summer_Dream/
 │   ├── rsvp_form.js            # RSVP form controller
 │   ├── albums.js               # Albums page logic
 │   ├── theme.js                # Theme switching
-│   ├── language.js             # Internationalization
+│   ├── language.js             # Internationalization (EN/FR/DE)
+│   ├── i18n.js                 # Browser locale detection
 │   ├── info.js                 # Info page controller
 │   ├── admin.js                # Admin dashboard controller
 │   ├── utility.js              # Utility functions
@@ -86,9 +87,11 @@ summer_Dream/
 │   └── images/                 # Image assets
 │
 ├── docs/                        # Documentation
-│   ├── COMPLETE_SETUP.md       # Complete setup guide
+│   ├── README.md               # Documentation index
+│   ├── PRODUCTION_SETUP.md     # Production setup guide
 │   ├── DEPLOYMENT.md           # Deployment instructions
-│   ├── EMAIL_SYSTEM.md         # Email system documentation
+│   ├── ARCHITECTURE.md         # Architecture reference
+│   ├── EMAIL_SYSTEM.md         # Email system (Brevo)
 │   ├── RSVP_SYSTEM.md          # RSVP system guide
 │   └── SECURITY.md             # Security best practices
 │
@@ -171,7 +174,7 @@ Or connect your GitHub repository to Netlify for automatic deployments.
 ## 📖 Detailed Documentation
 
 ### Setup Guides
-- **[Complete Setup Guide](docs/COMPLETE_SETUP.md)** - Step-by-step setup instructions
+- **[Production Setup Guide](docs/PRODUCTION_SETUP.md)** - Step-by-step setup instructions
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Detailed deployment walkthrough
 - **[Email System Guide](docs/EMAIL_SYSTEM.md)** - Brevo configuration and email templates
 - **[RSVP System Guide](docs/RSVP_SYSTEM.md)** - RSVP workflow and admin dashboard usage
@@ -410,15 +413,12 @@ See documentation in `docs/` for more troubleshooting help.
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-**Current Version:** 2.1.0 (Production Release)
+**Current Version:** 2.2.0
 
-### Recent Updates
-- Complete RSVP system with email confirmations
-- Admin dashboard with auto-refresh
-- Multi-language support
-- Enhanced email templates
-- Children under 13 limitation notice
-- Configurable rows per page in admin dashboard
+### Recent Updates (v2.2.0)
+- RSVP form closed after May 1, 2026 deadline (client + server)
+- Browser language auto-detection (EN / FR / DE)
+- Documentation consolidated; redundant files removed
 
 ---
 
@@ -444,7 +444,8 @@ Built with modern web technologies and best practices
 ## 📞 Support
 
 For detailed guides and documentation:
-- [Complete Setup Guide](docs/COMPLETE_SETUP.md)
+- [Documentation Index](docs/README.md)
+- [Production Setup](docs/PRODUCTION_SETUP.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [Email System Guide](docs/EMAIL_SYSTEM.md)
 - [RSVP System Guide](docs/RSVP_SYSTEM.md)

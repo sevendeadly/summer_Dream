@@ -1,0 +1,19 @@
+{
+  "default": true,
+  "MD022": true,
+  "MD031": true,
+  "MD032": true,
+  "MD040": true,
+  "MD013": {
+    "line_length": 120
+  },
+  "MD024": {
+    "siblings_only": true
+  },
+  "MD026": {
+    "punctuation": ".,;:!?"
+  },
+  "MD060": {
+    "style": "any"
+  }
+}

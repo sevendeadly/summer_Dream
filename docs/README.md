@@ -2,166 +2,133 @@
 
 Complete documentation for the Audrey & Josue-Daniel 2026 Wedding Website.
 
+**Current version:** 2.2.0
+
 ---
 
-## 📚 Documentation Files
+## Documentation Files
 
-### **[COMPLETE_SETUP.md](COMPLETE_SETUP.md)** - Start Here ⭐
-The master setup guide covering:
-- Local development setup
-- Configuration files
+### **[PRODUCTION_SETUP.md](PRODUCTION_SETUP.md)** — Start here
+
+Step-by-step production setup:
+
+- Local development with `netlify dev`
 - Environment variables
-- Netlify deployment
-- Admin dashboard setup
-- Testing checklist
-- Troubleshooting
+- Brevo email configuration
+- Admin dashboard
+- Deployment checklist
 
-**Use this for:** Complete project setup from scratch
+**Use this for:** First-time setup and going live on Netlify.
 
 ---
 
-### **[RSVP_SYSTEM.md](RSVP_SYSTEM.md)** - RSVP Management
-Complete guide to RSVP storage and processing:
-- System overview and architecture
-- Netlify Blob Storage implementation
-- Submit RSVP function reference
-- Get RSVPs function reference
+### **[RSVP_SYSTEM.md](RSVP_SYSTEM.md)** — RSVP management
+
+- Netlify Blob Storage
+- Submit / get RSVP functions
 - Admin dashboard workflow
-- Email confirmation system
-- Deployment steps
+- RSVP deadline (closed after May 1, 2026)
+- Email confirmations via Brevo
 
-**Use this for:** Understanding and managing the RSVP system
+**Use this for:** RSVP storage, admin review, and deadline behavior.
 
 ---
 
-### **[EMAIL_SYSTEM.md](EMAIL_SYSTEM.md)** - Email Configuration
-Detailed email sending system documentation:
-- Brevo integration setup
-- Email templates
+### **[EMAIL_SYSTEM.md](EMAIL_SYSTEM.md)** — Email configuration
+
+- Brevo API setup
+- Confirmation templates
 - Admin approval workflow
-- Email testing
-- Troubleshooting email issues
-- Rate limiting
-- Email deliverability
+- Troubleshooting deliverability
 
-**Use this for:** Email configuration and troubleshooting
+**Use this for:** Email setup and troubleshooting.
 
 ---
 
-### **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment & Hosting
-Deployment procedures and workflows:
-- Netlify deployment process
+### **[DEPLOYMENT.md](DEPLOYMENT.md)** — Deployment and hosting
+
+- Netlify deployment
 - GitHub integration
 - Environment variables on Netlify
-- Custom domains
-- SSL/HTTPS setup
-- Monitoring and logs
-- Rollback procedures
+- Custom domains, SSL, logs, rollback
 
-**Use this for:** Deploying to production and managing live site
+**Use this for:** Deploying and operating the live site.
 
 ---
 
-### **[SECURITY.md](SECURITY.md)** - Security Best Practices
-Security implementation guide:
+### **[SECURITY.md](SECURITY.md)** — Security practices
+
 - API key protection
 - Admin authentication
-- Data privacy
-- CORS configuration
-- Input validation
-- HTTPS enforcement
-- Secrets management
+- Input validation and HTTPS
 
-**Use this for:** Securing your wedding website
+**Use this for:** Securing the site before and after launch.
 
 ---
 
-## 🎯 Quick Navigation
+### **[ARCHITECTURE.md](ARCHITECTURE.md)** — Architecture reference
 
-### I want to...
+- MVC layout
+- Data flow and serverless functions
 
-**...setup the project for the first time**
-→ [COMPLETE_SETUP.md](COMPLETE_SETUP.md)
-
-**...understand how RSVPs are stored**
-→ [RSVP_SYSTEM.md](RSVP_SYSTEM.md)
-
-**...configure Brevo for emails**
-→ [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md) or [RSVP_SYSTEM.md](RSVP_SYSTEM.md#email-service-configuration)
-
-**...deploy to Netlify**
-→ [DEPLOYMENT.md](DEPLOYMENT.md) or [COMPLETE_SETUP.md](COMPLETE_SETUP.md#deployment-process)
-
-**...make the site more secure**
-→ [SECURITY.md](SECURITY.md)
-
-**...troubleshoot a problem**
-→ See "Troubleshooting" section in relevant doc
+**Use this for:** Understanding how the codebase is organized.
 
 ---
 
-## 📂 Other Important Resources
+## Quick navigation
 
-- **Project Instructions:** [.github/copilot-instructions.md](../.github/copilot-instructions.md) - MVC architecture, patterns, conventions
-- **Changelog:** [CHANGELOG.md](../CHANGELOG.md) - Version history and updates
-- **Code:** Check `controllers/`, `models/`, `views/` folders for implementation
-
----
-
-## 🔑 Key Environment Variables
-
-All Netlify environment variables used in the project:
-
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `BREVO_API_KEY` | Brevo authentication | `xkeysib-xxxxx...` |
-| `BREVO_FROM_EMAIL` | Sender email address | `noreply@yourwedding.com` |
-| `ADMIN_EMAIL` | Admin notification email | `your-email@example.com` |
-| `ADMIN_SECRET` | Admin dashboard password | `strong-32-char-password` |
+| Goal | Document |
+|------|----------|
+| Set up the project | [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) |
+| Understand RSVP storage | [RSVP_SYSTEM.md](RSVP_SYSTEM.md) |
+| Configure Brevo | [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md) |
+| Deploy to Netlify | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Harden security | [SECURITY.md](SECURITY.md) |
 
 ---
 
-## 🚀 Deployment Checklist
+## Other resources
 
-Before going live:
+- **[README.md](../README.md)** — Project overview and quick start
+- **[QUICK_REFERENCE.md](../QUICK_REFERENCE.md)** — Common customization tasks
+- **[CHANGELOG.md](../CHANGELOG.md)** — Version history
+- **[.github/copilot-instructions.md](../.github/copilot-instructions.md)** — MVC patterns for contributors
 
-- [ ] Read [COMPLETE_SETUP.md](COMPLETE_SETUP.md)
-- [ ] Configure all environment variables
+---
+
+## Key environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `BREVO_API_KEY` | Brevo API authentication |
+| `BREVO_FROM_EMAIL` | Verified sender address |
+| `ADMIN_EMAIL` | Admin notification recipient |
+| `ADMIN_SECRET` | Admin dashboard password |
+| `RSVP_DEADLINE` | ISO datetime; blocks new RSVPs after this instant |
+
+---
+
+## Deployment checklist
+
+- [ ] Read [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md)
+- [ ] Configure all environment variables on Netlify
 - [ ] Review [SECURITY.md](SECURITY.md)
-- [ ] Test RSVP workflow locally
-- [ ] Deploy to Netlify
-- [ ] Test all functions in production
-- [ ] Verify emails send correctly
-- [ ] Test admin dashboard
-- [ ] Share website with guests
+- [ ] Run `netlify dev` and test admin dashboard
+- [ ] Deploy and verify functions in production
+- [ ] Confirm RSVP closed state on `views/rsvp.html` (deadline passed)
+- [ ] Test language auto-detect and manual switcher
 
 ---
 
-## 📧 Support
+## Support
 
-### For Issues:
+1. **Build / deploy:** [DEPLOYMENT.md](DEPLOYMENT.md)
+2. **RSVP / storage:** [RSVP_SYSTEM.md](RSVP_SYSTEM.md)
+3. **Email:** [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md)
+4. **Security:** [SECURITY.md](SECURITY.md)
 
-1. **Build/Deployment:** See [DEPLOYMENT.md](DEPLOYMENT.md#troubleshooting)
-2. **RSVP/Storage:** See [RSVP_SYSTEM.md](RSVP_SYSTEM.md#troubleshooting)
-3. **Email Problems:** See [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md#troubleshooting)
-4. **Security Concerns:** See [SECURITY.md](SECURITY.md)
-
-### Check Function Logs:
-
-1. Go to Netlify Dashboard
-2. Site → Functions → Select function
-3. View logs and errors
+Function logs: Netlify Dashboard → Site → Functions → select function.
 
 ---
 
-## 🎉 Version History
-
-Current Version: **2.1.0**
-
-See [CHANGELOG.md](../CHANGELOG.md) for detailed version history and updates.
-
----
-
-**Last Updated:** April 18, 2026
-
-Made with ❤️ for J-D & A-N's Special Day
+**Last updated:** May 2026

@@ -11,22 +11,26 @@ A lightweight, production-ready wedding website (June 12, 2026) using **MVC arch
 ## 🏗️ Architecture & Data Flow
 
 ### MVC Pattern (Non-Negotiable)
+
 Every feature follows strict MVC structure:
+
 - **Models** (`models/config.js`, `models/rsvp.js`) - Data & validation
-- **Controllers** (`controllers/*.js`) - Business logic & DOM interaction  
+- **Controllers** (`controllers/*.js`) - Business logic & DOM interaction
 - **Views** (`views/*.html`) - HTML templates (no script logic embedded)
 
 **Pattern Example:** When adding form feature:
+
 1. Create validation method in `models/rsvp.js` (or new model)
 2. Create controller class (e.g., `RSVPController` in `controllers/rsvp_form.js`)
 3. Import & initialize in `app.js` → `new FeatureController().init()`
 4. Controller queries DOM elements by ID and sets up event listeners in `init()`
 
 ### Serverless Backend Flow
-```
+
+```text
 Client Form Submit → Netlify Function (controllers/netlify-func/submit-rsvp.js)
                    → Netlify Blob Storage (stores RSVP)
-                   
+
 Admin reviews RSVP → Approve button → Netlify Function (send-confirmation.js)
                    → Brevo API sends email confirmation
                    → Updates RSVP status to "approved" or "declined"
@@ -34,7 +38,7 @@ Admin reviews RSVP → Approve button → Netlify Function (send-confirmation.js
 Admin Dashboard ← Get RSVPs: get-rsvps.js (auth via X-Admin-Secret header)
 ```
 
-**Critical:** API keys NEVER in client code. Functions use environment variables. See `docs/COMPLETE_SETUP.md` and `docs/RSVP_SYSTEM.md` for setup.
+**Critical:** API keys NEVER in client code. Functions use environment variables. See `docs/PRODUCTION_SETUP.md` and `docs/RSVP_SYSTEM.md` for setup.
 
 ---
 
@@ -52,6 +56,7 @@ Admin Dashboard ← Get RSVPs: get-rsvps.js (auth via X-Admin-Secret header)
 ## 🔑 Key Conventions & Patterns
 
 ### 1. Controller Class Structure
+
 ```javascript
 export class FeatureController {
     constructor() {
@@ -59,16 +64,16 @@ export class FeatureController {
         this.form = document.getElementById('feature-form');
         this.submitBtn = document.querySelector('.btn-submit');
     }
-    
+
     init() {
         if (!this.form) return; // Skip if not on this page
         this.setupEventListeners();
     }
-    
+
     setupEventListeners() {
         this.submitBtn.addEventListener('click', () => this.handleSubmit());
     }
-    
+
     async handleSubmit() {
         // Business logic here
     }
@@ -76,12 +81,14 @@ export class FeatureController {
 ```
 
 ### 2. Environment Variables & Configuration
+
 - All config in `models/config.js` using ES6 `export const`
 - Wedding date: `new Date('2026-06-12T18:00:00').getTime()` (ceremony start; stored as timestamp)
 - Theme palettes: `THEME_PALETTES` object with `name`, `primary`, `secondary` keys
 - Payment links: `PAYMENT_LINKS` object (PayPal, Wise, Wero, bank transfer)
 
 ### 3. CSS Custom Properties System
+
 - **Colors:** `--primary`, `--secondary`, `--accent` (changed by theme controller)
 - **Spacing:** `--spacing-xs`, `--spacing-sm`, `--spacing-md`, `--spacing-lg`, `--spacing-xl` (replaces pixel values)
 - **Shadows:** `--shadow-sm`, `--shadow-md`, `--shadow-lg` (for cards, modals)
@@ -89,20 +96,23 @@ export class FeatureController {
 - Font stack: Cormorant Garamond (headings), Montserrat (body), Lora (elegant accents)
 
 ### 4. Form Handling Pattern (RSVP Form as Example)
+
 1. Model validates: `new RSVPData(formData).validate()` returns `{isValid, errors: []}`
 2. Controller shows/hides conditional fields on attendance radio change
-3. Submit calls Netlify function `/submit-rsvp` (NOT direct Notion API)
-4. Response: `{success, message, notionId}` with proper error handling
+3. Submit calls Netlify function `/submit-rsvp` (returns 403 after `RSVP_DEADLINE`)
+4. Response: `{success, id, message}` with proper error handling
 5. Display success/error in `#form-message` element
 
 ### 5. Netlify Functions Pattern
+
 - Functions in `controllers/netlify-func/` are **Node.js**, NOT ES6 modules
 - HTTP handler: `exports.handler = async (event, context) => {}`
-- Access env vars: `process.env.NOTION_API_KEY`
+- Access env vars: `process.env.BREVO_API_KEY`, `process.env.RSVP_DEADLINE`, etc.
 - Return: `{statusCode: 200, body: JSON.stringify({success, data})}`
 - Auth: Admin functions check header `X-Admin-Secret` against `process.env.ADMIN_SECRET`
 
 ### 6. Error Handling & User Feedback
+
 - Show errors in dedicated `#form-message` or `#error-container` elements
 - Classes: `.error` (red), `.success` (green), `.info` (blue)
 - Always disable submit button during API calls, re-enable on response
@@ -113,23 +123,32 @@ export class FeatureController {
 ## 🔗 Critical Integration Points
 
 ### Admin Dashboard Workflow
+
 1. **Authentication:** `AdminController` checks `localStorage.getItem('adminSecret')`
 2. **Data Fetch:** Calls `/.netlify/functions/get-rsvps` with header `X-Admin-Secret`
 3. **Filtering/Sorting:** Happens client-side in `AdminController` (search, attending filter, sort by column)
 4. **Approval:** Calls `/.netlify/functions/send-confirmation` with admin auth
 5. **Re-render:** Table updates from `this.filteredRSVPs` array
 
-### Notion Integration
-- Database ID: `NOTION_CONFIG.databaseId` in `models/config.js`
-- API Key: **NEVER** in client code, only in Netlify function env vars
-- Function `submit-rsvp.js` uses `@notionhq/client` to create pages
-- Database schema: `name`, `email`, `phone`, `attending`, `guests`, `dietary`, `message`, `status` (pending/approved/declined)
+### RSVP storage (Netlify Blobs)
+
+- `submit-rsvp.js` stores RSVPs via `@netlify/blobs`
+- `get-rsvps.js` lists RSVPs for the admin dashboard (requires `X-Admin-Secret`)
+- Public submissions blocked after `RSVP_DEADLINE` (default May 1, 2026)
+- Fields: `name`, `email`, `phone`, `attending`, `guests`, `dietary`, `message`, `status` (pending/approved/declined)
+
+### Internationalization
+
+- `controllers/i18n.js` — browser locale detection (`en`, `fr`, `de`)
+- `controllers/language.js` — translations and `[data-i18n]` application
+- Manual switcher overrides; first visit auto-detects and persists to `localStorage`
 
 ---
 
 ## 🚀 Development Workflows
 
 ### Adding a New Feature
+
 1. Check if data model exists; if not create in `models/`
 2. Create controller class in `controllers/newfeature.js`
 3. Add initialization in `app.js`: `import { NewFeatureController } from './controllers/newfeature.js'` + `new NewFeatureController().init()`
@@ -138,6 +157,7 @@ export class FeatureController {
 6. Test: `npm install && netlify dev` (or local server + check console for errors)
 
 ### Adding a Serverless Function
+
 1. Create in `controllers/netlify-func/functionname.js`
 2. Export async handler with `(event, context)` params
 3. Return `{statusCode, body: JSON.stringify(...)}`
@@ -146,6 +166,7 @@ export class FeatureController {
 6. Deploy: Push to GitHub → Netlify auto-deploys functions
 
 ### Debugging
+
 - Client: Browser DevTools (F12) → Console for errors, Network for API calls
 - Functions: `netlify dev` shows function logs; use `console.log()` for debugging
 - RSVP issues: Check admin secret, Netlify Blob Storage access
@@ -166,7 +187,7 @@ export class FeatureController {
 
 ## 📚 Essential Documentation Links
 
-- **Setup & Deployment:** `docs/COMPLETE_SETUP.md` (all env vars, functions, deployment)
+- **Setup & Deployment:** `docs/PRODUCTION_SETUP.md` (all env vars, functions, deployment)
 - **RSVP System:** `docs/RSVP_SYSTEM.md` (Netlify Blob Storage, admin dashboard)
 - **Email System:** `docs/EMAIL_SYSTEM.md` (Brevo email configuration)
 - **Security:** `docs/SECURITY.md` (API key protection, HTTPS, validation)
@@ -193,6 +214,7 @@ export class FeatureController {
 **Important:** This project uses the **Brevo Transactional Email API**, NOT SMTP Gmail.
 
 ### Environment Variables Structure
+
 ```bash
 BREVO_API_KEY=xkeysib-xxxxx...              # API key only
 BREVO_FROM_EMAIL=noreply@yourwedding.com    # Verified sender
@@ -201,18 +223,22 @@ ADMIN_SECRET=strong-password              # Admin dashboard auth
 ```
 
 ### Key Difference from Traditional SMTP
+
 - ❌ NO `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`
 - ✅ YES `BREVO_API_KEY` (API token for authentication)
 - ✅ YES `BREVO_FROM_EMAIL` (verified in Brevo dashboard)
 
 ### Functions Using Brevo
+
 - `controllers/netlify-func/send-confirmation.js` - Uses `@getbrevo/brevo` package
 - Initialization: `api.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)`
 - Send method: `await api.sendTransacEmail(sendSmtpEmail)`
 
 ### Netlify Deployment
+
 Set these environment variables in Netlify Dashboard → Site Settings → Build & Deploy → Environment:
-```
+
+```text
 BREVO_API_KEY: xkeysib-xxxxx... (from Brevo API Keys)
 BREVO_FROM_EMAIL: noreply@yourwedding.com (verified)
 ADMIN_EMAIL: your-email@example.com
@@ -220,7 +246,8 @@ ADMIN_SECRET: strong-password-here
 ```
 
 ### Brevo Quick Setup (5 minutes)
-1. Go to https://www.brevo.com/ → Sign up → Verify email
+
+1. Go to [Brevo](https://www.brevo.com/) → Sign up → Verify email
 2. Dashboard → Settings → SMTP & API → API Keys → Create API Key → Copy (starts with `xkeysib-`)
 3. Dashboard → Senders, Domains & Dedicated IPs → Add verified sender email
 4. Paste API key into Netlify environment variables above
@@ -241,5 +268,5 @@ ADMIN_SECRET: strong-password-here
 
 ---
 
-**Last Updated:** December 14, 2025  
-**Project Version:** 2.1.0 (Netlify Blob Storage + Brevo Email)
+**Last Updated:** May 2026  
+**Project Version:** 2.2.0 (RSVP deadline, i18n auto-detect, Netlify Blobs + Brevo)

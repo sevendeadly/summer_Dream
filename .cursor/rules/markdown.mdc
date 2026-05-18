@@ -1,0 +1,20 @@
+---
+description: Markdown style for docs and GitHub files (markdownlint)
+globs: "**/*.{md,mdc}"
+alwaysApply: false
+---
+
+# Markdown conventions
+
+Follow [markdownlint](https://github.com/DavidAnson/markdownlint) rules enforced in `.markdownlint.json`:
+
+- **MD022** — Blank line before and after every heading.
+- **MD031** — Blank line before and after fenced code blocks.
+- **MD032** — Blank line before and after lists (and between a heading/paragraph and a list).
+- **MD040** — Every fenced block must declare a language (`javascript`, `bash`, `html`, `text`, etc.). Use `text` for ASCII diagrams and directory trees.
+- **MD024** — Do not repeat the same heading text within a file; vary wording or merge sections.
+- **MD013** — Line length should be no more than 120 characters; wrap them if necessary.
+- **MD026** — Headings must not end with `.`, `,`, `;`, `:`, `!`, or `?`.
+- **MD060** — Table columns use any pipe alignment (pad or compact, but stay consistent per table).
+
+Also prefer `[label](url)` over bare URLs when a link appears in prose.

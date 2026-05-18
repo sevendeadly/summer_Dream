@@ -1,11 +1,13 @@
 // ===========================
 // LANGUAGE CONTROLLER
-// Handles multi-language support (English, French, German)
+// i18n for English, French, and German with browser auto-detection
 // ===========================
+
+import { detectBrowserLocale } from './i18n.js';
 
 export class LanguageController {
     constructor() {
-        this.currentLanguage = this.getStoredLanguage() || 'en';
+        this.currentLanguage = this.getStoredLanguage() || detectBrowserLocale();
         this.translations = {
             en: {
                 // Navigation
@@ -82,6 +84,10 @@ export class LanguageController {
                     message: 'Message for the Couple',
                     messagePlaceholder: 'Share your well wishes, song requests, or any questions you might have!',
                     submit: 'Submit RSVP',
+                    deadlinePassedTitle: 'RSVP deadline has passed',
+                    deadlinePassedMessage: 'The RSVP deadline was May 1, 2026. We are no longer accepting responses through this form. If you need to reach us, please contact us directly.',
+                    venueLimitation: 'Due to accommodation restrictions at our venue, we regretfully cannot accommodate children under 13 years of age. We appreciate your understanding!',
+                    submitting: 'Submitting...',
                     setupInstructions: '🔧 Setup Instructions',
                     setupDescription: 'To enable RSVP submissions to Notion:',
                     setupNote: 'Note: The form will show a message even without Notion setup, but won\'t save data.'
@@ -192,6 +198,10 @@ export class LanguageController {
                     message: 'Message pour le Couple',
                     messagePlaceholder: 'Partagez vos vœux, demandes de chansons ou toute question que vous pourriez avoir !',
                     submit: 'Soumettre le RSVP',
+                    deadlinePassedTitle: 'La date limite de RSVP est dépassée',
+                    deadlinePassedMessage: 'La date limite de RSVP était le 1er mai 2026. Nous n\'acceptons plus de réponses via ce formulaire. Pour nous contacter, veuillez nous écrire directement.',
+                    venueLimitation: 'En raison des restrictions d\'hébergement sur notre lieu, nous ne pouvons malheureusement pas accueillir les enfants de moins de 13 ans. Merci de votre compréhension !',
+                    submitting: 'Envoi en cours...',
                     setupInstructions: '🔧 Instructions de Configuration',
                     setupDescription: 'Pour activer les soumissions RSVP vers Notion :',
                     setupNote: 'Note : Le formulaire affichera un message même sans configuration Notion, mais ne sauvegardera pas les données.'
@@ -302,6 +312,10 @@ export class LanguageController {
                     message: 'Nachricht für das Paar',
                     messagePlaceholder: 'Teilen Sie Ihre Wünsche, Liedwünsche oder Fragen mit, die Sie haben könnten!',
                     submit: 'RSVP Absenden',
+                    deadlinePassedTitle: 'Die RSVP-Frist ist abgelaufen',
+                    deadlinePassedMessage: 'Die RSVP-Frist war der 1. Mai 2026. Wir nehmen über dieses Formular keine Antworten mehr entgegen. Bitte kontaktieren Sie uns direkt, wenn Sie uns erreichen möchten.',
+                    venueLimitation: 'Aufgrund von Unterkunftsbeschränkungen am Veranstaltungsort können wir leider keine Kinder unter 13 Jahren unterbringen. Vielen Dank für Ihr Verständnis!',
+                    submitting: 'Wird gesendet...',
                     setupInstructions: '🔧 Einrichtungsanweisungen',
                     setupDescription: 'Um RSVP-Übermittlungen an Notion zu aktivieren:',
                     setupNote: 'Hinweis: Das Formular zeigt eine Nachricht auch ohne Notion-Einrichtung an, speichert jedoch keine Daten.'
@@ -341,19 +355,21 @@ export class LanguageController {
     }
 
     init() {
-        // Make language controller globally accessible for other controllers
         window.languageController = this;
-        
-        // Update HTML lang attribute to match the current language
+
+        if (!this.getStoredLanguage()) {
+            this.setStoredLanguage(this.currentLanguage);
+        }
+
         document.documentElement.lang = this.currentLanguage;
-        
+
         this.setupLanguageSwitcher();
         this.applyLanguage(this.currentLanguage);
         this.updateLanguageSwitcher();
     }
 
     getStoredLanguage() {
-        return localStorage.getItem('preferredLanguage') || 'en';
+        return localStorage.getItem('preferredLanguage');
     }
 
     setStoredLanguage(lang) {
@@ -460,116 +476,30 @@ export class LanguageController {
         const t = this.translations[lang];
         if (!t) return;
 
-        // Update navigation
-        this.updateText('[data-i18n="nav.home"]', t.nav.home);
-        this.updateText('[data-i18n="nav.info"]', t.nav.info);
-        this.updateText('[data-i18n="nav.gift"]', t.nav.gift);
-        this.updateText('[data-i18n="nav.rsvp"]', t.nav.rsvp);
-        this.updateText('[data-i18n="nav.albums"]', t.nav.albums);
+        this.currentLanguage = lang;
 
-        // Update home page
-        this.updateText('[data-i18n="home.tagline"]', t.home.tagline);
-        this.updateText('[data-i18n="home.quickLinks"]', t.home.quickLinks);
-        this.updateText('[data-i18n="home.venueDetails"]', t.home.venueDetails);
-        this.updateText('[data-i18n="home.supportJourney"]', t.home.supportJourney);
-        this.updateText('[data-i18n="home.letUsKnow"]', t.home.letUsKnow);
-        this.updateText('[data-i18n="home.viewPhotos"]', t.home.viewPhotos);
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+            const key = el.getAttribute('data-i18n');
+            const value = this.getTranslationForLocale(lang, key);
+            if (typeof value === 'string') {
+                if (el.tagName === 'INPUT' && (el.type === 'submit' || el.type === 'button')) {
+                    el.value = value;
+                } else {
+                    el.textContent = value;
+                }
+            }
+        });
 
-        // Update info page
-        this.updateText('[data-i18n="info.title"]', t.info.title);
-        this.updateText('[data-i18n="info.subtitle"]', t.info.subtitle);
-        this.updateText('[data-i18n="info.venue"]', t.info.venue);
-        this.updateText('[data-i18n="info.ceremonyReception"]', t.info.ceremonyReception);
-        this.updateText('[data-i18n="info.schedule"]', t.info.schedule);
-        this.updateText('[data-i18n="info.guestArrival"]', t.info.guestArrival);
-        this.updateText('[data-i18n="info.welcomeDrinks"]', t.info.welcomeDrinks);
-        this.updateText('[data-i18n="info.ceremonyBegins"]', t.info.ceremonyBegins);
-        this.updateText('[data-i18n="info.cocktailHour"]', t.info.cocktailHour);
-        this.updateText('[data-i18n="info.receptionDinner"]', t.info.receptionDinner);
-        this.updateText('[data-i18n="info.lastDance"]', t.info.lastDance);
-        this.updateText('[data-i18n="info.dressCode"]', t.info.dressCode);
-        this.updateText('[data-i18n="info.formalAttire"]', t.info.formalAttire);
-        this.updateText('[data-i18n="info.dressCodeNote"]', t.info.dressCodeNote);
-        this.updateText('[data-i18n="info.colorCodeNote"]', t.info.colorCodeNote);
-        this.updateText('[data-i18n="info.chooseColors"]', t.info.chooseColors);
-        this.updateText('[data-i18n="info.selectMultiple"]', t.info.selectMultiple);
-        this.updateText('[data-i18n="info.selectedColors"]', t.info.selectedColors);
-        this.updateText('[data-i18n="info.noneYet"]', t.info.noneYet);
-        this.updateText('[data-i18n="info.getItinerary"]', t.info.getItinerary);
-        this.updateText('[data-i18n="info.accommodations"]', t.info.accommodations);
-        this.updateText('[data-i18n="info.roomOptions"]', t.info.roomOptions);
-        this.updateText('[data-i18n="info.bookNow"]', t.info.bookNow);
-        this.updateText('[data-i18n="info.faq"]', t.info.faq);
-        this.updateText('[data-i18n="info.plusOne"]', t.info.plusOne);
-        this.updateText('[data-i18n="info.plusOneAnswer"]', t.info.plusOneAnswer);
-        this.updateText('[data-i18n="info.parking"]', t.info.parking);
-        this.updateText('[data-i18n="info.parkingAnswer"]', t.info.parkingAnswer);
-        this.updateText('[data-i18n="info.ceremonyLocation"]', t.info.ceremonyLocation);
-        this.updateText('[data-i18n="info.ceremonyLocationAnswer"]', t.info.ceremonyLocationAnswer);
-        this.updateText('[data-i18n="info.dietary"]', t.info.dietary);
-        this.updateText('[data-i18n="info.dietaryAnswer"]', t.info.dietaryAnswer);
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            const value = this.getPlaceholderTranslation(lang, key);
+            if (typeof value === 'string' && el.placeholder !== undefined) {
+                el.placeholder = value;
+            }
+        });
 
-        // Update RSVP page
-        this.updateText('[data-i18n="rsvp.title"]', t.rsvp.title);
-        this.updateText('[data-i18n="rsvp.subtitle"]', t.rsvp.subtitle);
-        this.updateText('[data-i18n="rsvp.deadline"]', t.rsvp.deadline);
-        this.updateText('[data-i18n="rsvp.fullName"]', t.rsvp.fullName);
-        this.updateText('[data-i18n="rsvp.email"]', t.rsvp.email);
-        this.updateText('[data-i18n="rsvp.phone"]', t.rsvp.phone);
-        this.updateText('[data-i18n="rsvp.attending"]', t.rsvp.attending);
-        this.updateText('[data-i18n="rsvp.yes"]', t.rsvp.yes);
-        this.updateText('[data-i18n="rsvp.no"]', t.rsvp.no);
-        this.updateText('[data-i18n="rsvp.numberOfGuests"]', t.rsvp.numberOfGuests);
-        this.updateText('[data-i18n="rsvp.guest"]', t.rsvp.guest);
-        this.updateText('[data-i18n="rsvp.guests"]', t.rsvp.guests);
-        this.updateText('[data-i18n="rsvp.dietaryRestrictions"]', t.rsvp.dietaryRestrictions);
-        this.updateText('[data-i18n="rsvp.dietaryPlaceholder"]', t.rsvp.dietaryPlaceholder);
-        this.updateText('[data-i18n="rsvp.message"]', t.rsvp.message);
-        this.updateText('[data-i18n="rsvp.messagePlaceholder"]', t.rsvp.messagePlaceholder);
-        this.updateText('[data-i18n="rsvp.submit"]', t.rsvp.submit);
-        this.updateText('[data-i18n="rsvp.setupInstructions"]', t.rsvp.setupInstructions);
-        this.updateText('[data-i18n="rsvp.setupDescription"]', t.rsvp.setupDescription);
-        this.updateText('[data-i18n="rsvp.setupNote"]', t.rsvp.setupNote);
-
-        // Update gift page
-        this.updateText('[data-i18n="gift.title"]', t.gift.title);
-        this.updateText('[data-i18n="gift.subtitle"]', t.gift.subtitle);
-        this.updateText('[data-i18n="gift.onlinePayment"]', t.gift.onlinePayment);
-        this.updateText('[data-i18n="gift.givePayPal"]', t.gift.givePayPal);
-        this.updateText('[data-i18n="gift.giveWise"]', t.gift.giveWise);
-        this.updateText('[data-i18n="gift.weroPayment"]', t.gift.weroPayment);
-        this.updateText('[data-i18n="gift.weroDescription"]', t.gift.weroDescription);
-        this.updateText('[data-i18n="gift.bankTransfer"]', t.gift.bankTransfer);
-        this.updateText('[data-i18n="gift.bankDescription"]', t.gift.bankDescription);
-        this.updateText('[data-i18n="gift.accountName"]', t.gift.accountName);
-        this.updateText('[data-i18n="gift.reference"]', t.gift.reference);
-        this.updateText('[data-i18n="gift.referencePlaceholder"]', t.gift.referencePlaceholder);
-        this.updateText('[data-i18n="gift.thankYou"]', t.gift.thankYou);
-        this.updateText('[data-i18n="gift.support"]', t.gift.support);
-
-        // Update albums page
-        this.updateText('[data-i18n="albums.title"]', t.albums.title);
-        this.updateText('[data-i18n="albums.subtitle"]', t.albums.subtitle);
-
-        // Update common elements
-        this.updateText('[data-i18n="common.days"]', t.common.days);
-        this.updateText('[data-i18n="common.hours"]', t.common.hours);
-        this.updateText('[data-i18n="common.minutes"]', t.common.minutes);
-        this.updateText('[data-i18n="common.seconds"]', t.common.seconds);
-        this.updateText('[data-i18n="common.madeWith"]', t.common.madeWith);
-
-        // Update placeholders
-        this.updatePlaceholder('[data-i18n-placeholder="rsvp.fullName"]', t.rsvp.fullNamePlaceholder);
-        this.updatePlaceholder('[data-i18n-placeholder="rsvp.email"]', t.rsvp.emailPlaceholder);
-        this.updatePlaceholder('[data-i18n-placeholder="rsvp.phone"]', t.rsvp.phonePlaceholder);
-        this.updatePlaceholder('[data-i18n-placeholder="rsvp.dietaryRestrictions"]', t.rsvp.dietaryPlaceholder);
-        this.updatePlaceholder('[data-i18n-placeholder="rsvp.message"]', t.rsvp.messagePlaceholder);
-        this.updatePlaceholder('[data-i18n-placeholder="gift.reference"]', t.gift.referencePlaceholder);
-
-        // Update select options for guests
         this.updateGuestOptions(t.rsvp.guest, t.rsvp.guests);
 
-        // Update selected colors display if it exists and no colors are selected
         const selectedColorsList = document.getElementById('selected-colors-list');
         const infoController = window.infoController;
         if (selectedColorsList && infoController && infoController.selectedColors.length === 0) {
@@ -577,24 +507,24 @@ export class LanguageController {
         }
     }
 
-    updateText(selector, text) {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            if (el.tagName === 'INPUT' && el.type !== 'submit' && el.type !== 'button') {
-                // Don't update input values, only labels
-                return;
+    getTranslationForLocale(lang, key) {
+        const keys = key.split('.');
+        let value = this.translations[lang];
+        for (const k of keys) {
+            if (value && value[k] !== undefined) {
+                value = value[k];
+            } else {
+                return key;
             }
-            el.textContent = text;
-        });
+        }
+        return value;
     }
 
-    updatePlaceholder(selector, text) {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            if (el.placeholder !== undefined) {
-                el.placeholder = text;
-            }
-        });
+    getPlaceholderTranslation(lang, baseKey) {
+        const keys = baseKey.split('.');
+        const last = keys[keys.length - 1];
+        keys[keys.length - 1] = `${last}Placeholder`;
+        return this.getTranslationForLocale(lang, keys.join('.'));
     }
 
     updateGuestOptions(guestSingular, guestPlural) {
@@ -613,18 +543,7 @@ export class LanguageController {
     }
 
     getTranslation(key) {
-        const keys = key.split('.');
-        let value = this.translations[this.currentLanguage];
-        
-        for (const k of keys) {
-            if (value && value[k]) {
-                value = value[k];
-            } else {
-                return key; // Return key if translation not found
-            }
-        }
-        
-        return value;
+        return this.getTranslationForLocale(this.currentLanguage, key);
     }
 }
 

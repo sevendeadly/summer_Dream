@@ -6,31 +6,26 @@
 
 ## 📧 System Overview
 
-The email confirmation system allows you to:
+**Version:** 2.2.0
 
-1. **Receive RSVPs** - Guests submit RSVP through the form
-2. **Store in Notion** - All submissions saved to your Notion database
-3. **Review & Approve** - Access admin dashboard to review submissions
-4. **Send Confirmations** - Send beautiful HTML emails to approved guests
-5. **Track Status** - Monitor attendance and approvals
+The email confirmation system works with **Netlify Blob Storage** (RSVP data) and **Brevo** (transactional email):
+
+1. **Receive RSVPs** — Guests submit via the form (until the RSVP deadline; see [RSVP_SYSTEM.md](RSVP_SYSTEM.md))
+2. **Store in Netlify Blobs** — `submit-rsvp.js` persists each submission
+3. **Review & approve** — Admin dashboard (`views/admin_dashboard.html`)
+4. **Send confirmations** — `send-confirmation.js` sends HTML emails via Brevo
+5. **Track status** — pending / approved / declined per RSVP
 
 ### Architecture
 
 ```
 Guest RSVP Form (views/rsvp.html)
          ↓
-   Netlify Function
-   (submit-rsvp.js)
-         ↓
-   Notion Database
+   submit-rsvp.js → Netlify Blob Storage
          ↓
    Admin Dashboard
-   (views/admin_dashboard.html)
          ↓
-   Netlify Function
-   (send-confirmation.js)
-         ↓
-   Guest Email
+   send-confirmation.js → Brevo API → Guest email
 ```
 
 ---
@@ -40,25 +35,23 @@ Guest RSVP Form (views/rsvp.html)
 ### 1.1 Install Dependencies
 
 ```bash
-npm install @notionhq/client nodemailer
+npm install
 ```
 
 This installs:
 
-- **@notionhq/client** - Notion API client
-- **nodemailer** - Email sending library
+- **@netlify/blobs** — RSVP storage
+- **@getbrevo/brevo** — Transactional email API
 
-### 1.2 Verify Package.json
-
-Your `package.json` should have:
+### 1.2 Verify package.json
 
 ```json
 {
-  "name": "wedding-website",
-  "version": "2.1.0",
+  "name": "summer-dream-website",
+  "version": "2.2.0",
   "dependencies": {
-    "@notionhq/client": "^2.2.15",
-    "nodemailer": "^6.9.8"
+    "@getbrevo/brevo": "^5.0.4",
+    "@netlify/blobs": "^6.5.0"
   }
 }
 ```
@@ -67,76 +60,30 @@ Your `package.json` should have:
 
 ## 🔐 Step 2: Environment Variables
 
-### 2.1 Create `.env` file
-
-```bash
-# Notion Configuration
-NOTION_API_KEY=secret_your_api_key_here
-NOTION_DATABASE_ID=your_database_id_here
-
-# Security
-ADMIN_SECRET=your-secure-admin-password-here
-```
-
-### 2.2 Get Notion API Key
-
-1. Go to [Notion Developers](https://www.notion.so/my-integrations)
-2. Click "Create new integration"
-3. Name it "Wedding Website"
-4. Copy the **Internal Integration Secret**
-5. Paste into `NOTION_API_KEY`
-
-### 2.3 Get Notion Database ID
-
-1. Open your RSVP database in Notion
-2. Copy the URL: `https://www.notion.so/workspace/[DATABASE_ID]?v=[VIEW_ID]`
-3. Extract the `DATABASE_ID` part (long string)
-4. Share the database with your integration (click "Share" → select integration)
-
-
-
-**Brevo (current project default):**
+Copy `.env.example` to `.env` for local development:
 
 ```bash
 BREVO_API_KEY=xkeysib-your-api-key
 BREVO_FROM_EMAIL=noreply@yourwedding.com
+ADMIN_EMAIL=your-email@example.com
+ADMIN_SECRET=your-secure-admin-password-here
+RSVP_DEADLINE=2026-05-01T23:59:59.999+02:00
 ```
+
+Set the same variables in **Netlify Dashboard** → Site settings → Environment variables.
+
+For full setup steps, see [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md).
 
 ---
 
-## 📦 Step 3: Notion Database Setup
+## 📦 Step 3: Brevo sender setup
 
-### 3.1 Create RSVP Database Structure
+1. Sign up at [brevo.com](https://www.brevo.com/) and verify your account.
+2. **Settings → SMTP & API → API Keys** — create a key (starts with `xkeysib-`).
+3. **Senders** — add and verify `BREVO_FROM_EMAIL`.
+4. Add `BREVO_API_KEY` and `BREVO_FROM_EMAIL` to Netlify environment variables.
 
-Create a new Notion database with these columns:
-
-
-| Column           | Type         | Options                                  |
-| ---------------- | ------------ | ---------------------------------------- |
-| **Name**         | Title        | -                                        |
-| **Email**        | Email        | -                                        |
-| **Phone**        | Phone Number | -                                        |
-| **Attending**    | Select       | "yes", "no"                              |
-| **Guests**       | Number       | -                                        |
-| **Dietary**      | Text         | -                                        |
-| **Message**      | Text         | -                                        |
-| **Submitted At** | Date         | -                                        |
-| **Status**       | Select       | "Pending Review", "Approved", "Declined" |
-
-
-### 3.2 Record Format Example
-
-```
-Name: John Doe
-Email: john@example.com
-Phone: +1 (555) 123-4567
-Attending: yes
-Guests: 2
-Dietary: Vegetarian
-Message: Looking forward to the celebration!
-Submitted At: 2026-06-01
-Status: Pending Review
-```
+RSVP records are stored in **Netlify Blobs**, not Brevo. See [RSVP_SYSTEM.md](RSVP_SYSTEM.md) for the data model (`name`, `email`, `phone`, `attending`, `guests`, `dietary`, `message`, `status`, `submittedAt`).
 
 ---
 
