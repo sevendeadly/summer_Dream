@@ -24,6 +24,12 @@
 
 const { getStore } = require('@netlify/blobs');
 
+const RSVP_DEADLINE_ISO = process.env.RSVP_DEADLINE || '2026-05-01T23:59:59.999+02:00';
+
+function isRsvpOpen() {
+  return Date.now() < new Date(RSVP_DEADLINE_ISO).getTime();
+}
+
 /**
  * Validate RSVP Data
  * 
@@ -107,6 +113,18 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
+    };
+  }
+
+  if (!isRsvpOpen()) {
+    console.warn(`[${requestId}] ⚠️ RSVP deadline has passed`);
+    return {
+      statusCode: 403,
+      body: JSON.stringify({
+        success: false,
+        error: 'RSVP deadline has passed',
+        message: 'The RSVP deadline was May 1, 2026. We are no longer accepting responses.',
+      }),
     };
   }
 

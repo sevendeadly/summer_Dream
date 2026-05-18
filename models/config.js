@@ -55,6 +55,18 @@ export const PAYMENT_LINKS = {
  */
 export const WEDDING_DATE = new Date('2026-06-12T16:00:00').getTime();
 
+/**
+ * RSVP deadline (end of day, Europe/Paris).
+ * Responses are blocked on the site and API after this instant.
+ */
+export const RSVP_DEADLINE_ISO = '2026-05-15T23:59:59.999+02:00';
+export const RSVP_DEADLINE_MS = new Date(RSVP_DEADLINE_ISO).getTime();
+
+/** @returns {boolean} Whether the public RSVP form accepts submissions */
+export function isRsvpOpen() {
+    return Date.now() < RSVP_DEADLINE_MS;
+}
+
 // Album configuration - Update these links after the wedding
 export const ALBUM_LINKS = {
     ceremony: 'https://lightroom.adobe.com/your-ceremony-album',

@@ -24,15 +24,20 @@
         <section class="page-header">
             <div class="container">
                 <h1 data-i18n="rsvp.title">RSVP</h1>
-                <p data-i18n="rsvp.subtitle">Please let us know if you can join us!</p>
-                <p class="rsvp-deadline"><span data-i18n="rsvp.deadline">Kindly respond by</span> <strong>May 1, 2026</strong></p>
+                <p id="rsvp-header-subtitle" data-i18n="rsvp.subtitle">Please let us know if you can join us!</p>
+                <p id="rsvp-deadline-line" class="rsvp-deadline"><span data-i18n="rsvp.deadline">Kindly respond by</span> <strong>May 1, 2026</strong></p>
             </div>
         </section>
 
         <section class="rsvp-section">
             <div class="container">
                 <div class="rsvp-form-container">
-                    <form id="rsvp-form" netlifyclass="rsvp-form">
+                    <div id="rsvp-closed" class="rsvp-closed" hidden>
+                        <h2 data-i18n="rsvp.deadlinePassedTitle">RSVP deadline has passed</h2>
+                        <p data-i18n="rsvp.deadlinePassedMessage">The RSVP deadline was May 1, 2026. We are no longer accepting responses through this form. If you need to reach us, please contact us directly.</p>
+                    </div>
+
+                    <form id="rsvp-form" class="rsvp-form">
                         <div class="form-group">
                             <label for="name" data-i18n="rsvp.fullName">Full Name *</label>
                             <input type="text" id="name" name="name" required data-i18n-placeholder="rsvp.fullName" placeholder="Enter your full name">
@@ -63,8 +68,8 @@
                         </div>
 
                         <div class="form-group" id="guests-group" style="display: none;">
-                            <div class="limitation-notice" style="background: #fff5f5; border-left: 4px solid #c9a86a; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                                <p style="margin: 0; color: #333;"><strong>⚠️ Important Venue Limitation:</strong> Due to accommodation restrictions at our venue, we regretfully cannot accommodate children under 13 years of age. We appreciate your understanding!</p>
+                            <div class="limitation-notice">
+                                <p data-i18n="rsvp.venueLimitation">Due to accommodation restrictions at our venue, we regretfully cannot accommodate children under 13 years of age. We appreciate your understanding!</p>
                             </div>
                             <label for="guests" data-i18n="rsvp.numberOfGuests">Number of Guest (This is individual) *</label>
                             <select id="guests" name="guests">

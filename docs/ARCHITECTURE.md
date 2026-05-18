@@ -1,5 +1,7 @@
 # Architecture Documentation
 
+**Version:** 2.2.0
+
 ## Overview
 
 This wedding website follows the **Model-View-Controller (MVC)** architectural pattern, providing clear separation of concerns and making the codebase maintainable, scalable, and easy to understand.
@@ -28,7 +30,7 @@ MVC (Model-View-Controller) is a design pattern that separates an application in
 
 ## Project Structure
 
-```
+```text
 summer_Dream/
 │
 ├── models/                    # DATA LAYER (Models)
@@ -75,7 +77,8 @@ summer_Dream/
 
 **Purpose:** Define data structures, validation rules, and configuration.
 
-#### `config.js`
+#### config.js
+
 - **Role:** Central configuration file
 - **Contains:**
   - Payment links (PayPal, Wise, Wero)
@@ -84,7 +87,8 @@ summer_Dream/
   - Theme palette definitions
 - **Why separate?** Single source of truth for all configuration. Easy to update without touching business logic.
 
-#### `rsvp.js`
+#### rsvp.js
+
 - **Role:** RSVP data model with validation
 - **Contains:**
   - `RSVPData` class - Data structure for RSVP submissions
@@ -97,6 +101,7 @@ summer_Dream/
 **Purpose:** HTML templates that define the user interface.
 
 **Characteristics:**
+
 - Pure HTML structure
 - No business logic embedded
 - Semantic HTML for accessibility
@@ -104,6 +109,7 @@ summer_Dream/
 - Data attributes for JavaScript hooks
 
 **Example Structure:**
+
 ```html
 <nav class="navbar">...</nav>
 <main>
@@ -120,22 +126,24 @@ summer_Dream/
 #### Client-Side Controllers
 
 **Pattern:** Each controller is a class with:
+
 - `constructor()` - Initialize DOM references and state
 - `init()` - Set up event listeners and initial state
 - Methods for specific functionality
 
 **Example:**
+
 ```javascript
 export class CountdownController {
     constructor() {
         this.countdownElement = document.getElementById('countdown');
     }
-    
+
     init() {
         this.updateCountdown();
         setInterval(() => this.updateCountdown(), 1000);
     }
-    
+
     updateCountdown() {
         // Business logic here
     }
@@ -147,6 +155,7 @@ export class CountdownController {
 **Purpose:** Handle server-side operations (API endpoints).
 
 **Pattern:** Netlify Functions export a handler:
+
 ```javascript
 exports.handler = async (event, context) => {
     // Handle HTTP request
@@ -161,7 +170,7 @@ exports.handler = async (event, context) => {
 
 ### RSVP Submission Flow
 
-```
+```text
 1. User fills RSVP form (View: rsvp.html)
    ↓
 2. User clicks submit
@@ -179,7 +188,7 @@ exports.handler = async (event, context) => {
 
 ### Admin Dashboard Flow
 
-```
+```text
 1. Admin logs in (View: admin_dashboard.html)
    ↓
 2. AdminController (Controller) authenticates
@@ -206,17 +215,19 @@ exports.handler = async (event, context) => {
 **Purpose:** Initialize all controllers when the page loads.
 
 **Pattern:**
+
 ```javascript
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize controllers in order
     const languageController = new LanguageController();
     languageController.init();
-    
+
     // ... other controllers
 });
 ```
 
 **Why this pattern?**
+
 - Centralized initialization
 - Clear dependency order
 - Easy to see what's active on each page
@@ -229,11 +240,13 @@ document.addEventListener('DOMContentLoaded', function() {
 ### Client-Side Communication
 
 **Controller ↔ View:**
+
 - Controllers query DOM elements
 - Controllers update DOM content
 - Event listeners connect user actions to controller methods
 
 **Controller ↔ Model:**
+
 - Controllers import and use model classes
 - Models provide validation and data structure
 - Controllers use model methods for data processing
@@ -241,12 +254,14 @@ document.addEventListener('DOMContentLoaded', function() {
 ### Server Communication
 
 **Client ↔ Server:**
+
 - Fetch API for HTTP requests
 - JSON for data serialization
 - Environment variables for configuration
 - Headers for authentication
 
 **Example:**
+
 ```javascript
 const response = await fetch('/.netlify/functions/submit-rsvp', {
     method: 'POST',
@@ -262,11 +277,13 @@ const response = await fetch('/.netlify/functions/submit-rsvp', {
 ### Client-Side State
 
 **Where stored:**
+
 - Controller instance properties (e.g., `this.allRSVPs`)
 - localStorage (e.g., `adminSecret`, theme preference)
 - DOM state (e.g., form values, visibility)
 
 **Pattern:**
+
 ```javascript
 class AdminController {
     constructor() {
@@ -281,6 +298,7 @@ class AdminController {
 ### Server-Side State
 
 **Where stored:**
+
 - Netlify Blobs (RSVP data)
 - Environment variables (configuration)
 - Brevo (email delivery status)
@@ -291,7 +309,7 @@ class AdminController {
 
 ### Authentication Flow
 
-```
+```text
 1. Admin enters secret in login form
    ↓
 2. Secret stored in localStorage (client-side)
@@ -317,6 +335,7 @@ class AdminController {
 ### Client-Side
 
 **Pattern:**
+
 ```javascript
 try {
     const response = await fetch(url);
@@ -331,6 +350,7 @@ try {
 ### Server-Side
 
 **Pattern:**
+
 ```javascript
 exports.handler = async (event, context) => {
     try {
@@ -348,24 +368,29 @@ exports.handler = async (event, context) => {
 ## Best Practices
 
 ### 1. Single Responsibility
+
 Each controller, model, and view has one clear purpose.
 
 ### 2. Separation of Concerns
+
 - Models: Data and validation
 - Views: Presentation only
 - Controllers: Business logic and coordination
 
 ### 3. DRY (Don't Repeat Yourself)
+
 - Configuration in one place (`models/config.js`)
 - Shared utilities in `controllers/utility.js`
 - Reusable components
 
 ### 4. Modularity
+
 - Each controller is a separate module
 - Easy to add/remove features
 - Clear dependencies
 
 ### 5. Documentation
+
 - Inline comments explain complex logic
 - README files for setup
 - Architecture documentation (this file)
@@ -437,6 +462,7 @@ guestBookController.init();
 ## Conclusion
 
 This MVC architecture provides:
+
 - ✅ Clear organization
 - ✅ Easy maintenance
 - ✅ Scalable structure

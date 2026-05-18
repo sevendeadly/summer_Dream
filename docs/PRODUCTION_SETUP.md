@@ -1,5 +1,7 @@
 # Production Setup Guide
 
+**Version:** 2.2.0
+
 ## Overview
 
 This guide provides step-by-step instructions for setting up the wedding website for production deployment. Follow these steps in order to ensure everything is configured correctly.
@@ -215,7 +217,9 @@ Follow the prompts:
 
 - `BREVO_API_KEY`
 - `BREVO_FROM_EMAIL`
+- `ADMIN_EMAIL`
 - `ADMIN_SECRET`
+- `RSVP_DEADLINE` (optional; default closes RSVPs after May 1, 2026)
 
 ### 5.3 Deploy
 

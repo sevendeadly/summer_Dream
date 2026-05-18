@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - May 2026
+
+### Added
+
+- **RSVP deadline enforcement** — Public RSVP form and `submit-rsvp` API block submissions after May 1, 2026 (configurable via `RSVP_DEADLINE`)
+- **Closed-state UI** — Translated message on the RSVP page when the deadline has passed
+- **Browser language auto-detection** — `controllers/i18n.js` maps `navigator.languages` to English, French, or German (France, USA, Canada, Cameroon, Germany)
+- **Generic i18n application** — `LanguageController` applies all `[data-i18n]` attributes from translation keys
+
+### Changed
+
+- **Documentation** — Removed redundant/historical docs; `docs/PRODUCTION_SETUP.md` is the primary setup guide
+- **RSVP venue notice** — Moved to i18n keys (`rsvp.venueLimitation`)
+
+### Removed
+
+- `UPDATE_SUMMARY.md`, `PROJECT_SUMMARY.md`, `Release_Note_V2.1.0.md`
+- `docs/COMPLETE_SETUP.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/MIGRATION_SUMMARY_v2.1.0.md`
+
+---
+
 ## [2.1.0] - Production Release - January 2026
 
 ### 🎉 Production Release
