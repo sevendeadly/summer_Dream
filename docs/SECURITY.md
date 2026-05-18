@@ -4,14 +4,14 @@ This guide covers security considerations for the wedding website.
 
 ## 🔐 Critical Security Rules
 
-### ❌ NEVER Do This:
+### ❌ NEVER Do This
 
 ```javascript
 // ❌ NEVER put real API keys in client-side code
 const NOTION_API_KEY = 'secret_abc123xyz...'; // Exposed to everyone!
 ```
 
-### ✅ ALWAYS Do This:
+### ✅ ALWAYS Do This
 
 ```javascript
 // ✅ Use serverless functions
@@ -23,14 +23,16 @@ const response = await fetch('/.netlify/functions/submit-rsvp', {
 
 ## 🛡️ What's Safe to Expose
 
-### ✅ Safe in Client-Side Code:
+### ✅ Safe in Client-Side Code
+
 - **Database IDs** - Not sensitive (Notion, Firebase, etc.)
 - **Public URLs** - Album links, website URLs
 - **Payment Links** - PayPal.me, Wise public links
 - **Configuration** - Wedding date, theme colors
 - **Public Bank Details** - IBAN for receiving payments (common practice)
 
-### ❌ Never Expose:
+### ❌ Never Expose
+
 - **API Keys** - Notion, Brevo, any service API keys
 - **Secrets** - Authentication tokens, private keys
 - **Passwords** - Any kind of password
@@ -40,7 +42,8 @@ const response = await fetch('/.netlify/functions/submit-rsvp', {
 
 ### Multi-Page MVC Version
 
-#### Safe Configuration (`models/config.js`):
+#### Safe Configuration (`models/config.js`)
+
 ```javascript
 // ✅ Safe - Public information
 export const WEDDING_DATE = new Date('2026-06-12T16:00:00').getTime();
@@ -59,7 +62,8 @@ export const NOTION_CONFIG = {
 };
 ```
 
-#### RSVP Controller (`controllers/rsvp.js`):
+#### RSVP Controller (`controllers/rsvp.js`)
+
 The RSVP controller includes a placeholder for Notion integration but notes that you should use a serverless function:
 
 ```javascript
@@ -77,6 +81,7 @@ The SPA version (`views/spa/index.html`) includes similar warnings and placehold
 ### Option 1: Netlify Functions (Recommended)
 
 **1. Create function file** (`netlify/functions/submit-rsvp.js`):
+
 ```javascript
 const { Client } = require('@notionhq/client');
 
@@ -112,11 +117,13 @@ exports.handler = async (event) => {
 ```
 
 **2. Set environment variables in Netlify:**
+
 - Go to Site settings → Environment variables
 - Add `NOTION_API_KEY`
 - Add `NOTION_DATABASE_ID`
 
 **3. Update client code** (`controllers/rsvp.js`):
+
 ```javascript
 async submitToNotion(data) {
     const response = await fetch('/.netlify/functions/submit-rsvp', {
@@ -147,6 +154,7 @@ Similar to Netlify, create in `api/submit-rsvp.js`.
 **IBAN numbers are meant to receive payments** - it's standard practice to share them publicly:
 
 ✅ **Safe to display:**
+
 ```html
 <p>IBAN: DE89 3704 0044 0532 0130 00</p>
 ```
@@ -154,6 +162,7 @@ Similar to Netlify, create in `api/submit-rsvp.js`.
 This is like sharing your address - people need it to send you things.
 
 **What NOT to share:**
+
 - ❌ Online banking passwords
 - ❌ Credit card numbers
 - ❌ PIN codes
@@ -162,6 +171,7 @@ This is like sharing your address - people need it to send you things.
 ### Payment Links
 
 ✅ **Safe to share:**
+
 - PayPal.me links
 - Wise payment links
 - Venmo usernames
@@ -171,7 +181,7 @@ These are designed to be shared publicly.
 
 ## 🔍 How to Check for Exposed Secrets
 
-### Before Committing:
+### Before Committing
 
 ```bash
 # Search for potential API keys
@@ -183,7 +193,7 @@ git grep -i "password"
 git diff --cached
 ```
 
-### Tools:
+### Tools
 
 1. **git-secrets** - Prevents committing secrets
 2. **truffleHog** - Finds secrets in git history
@@ -191,7 +201,7 @@ git diff --cached
 
 ## 📋 Security Checklist
 
-### Before Going Live:
+### Before Going Live
 
 - [ ] No API keys in client-side code
 - [ ] Notion integration uses serverless functions
@@ -202,7 +212,7 @@ git diff --cached
 - [ ] No passwords or secrets in code
 - [ ] Reviewed all committed files
 
-### Regular Maintenance:
+### Regular Maintenance
 
 - [ ] Check for security updates
 - [ ] Review access logs if using analytics
@@ -211,7 +221,7 @@ git diff --cached
 
 ## 🚨 If You Accidentally Expose a Secret
 
-### Immediate Actions:
+### Immediate Actions
 
 1. **Revoke the key immediately**
    - Notion: Delete integration or regenerate key
@@ -219,6 +229,7 @@ git diff --cached
    - Any service: Regenerate credentials
 
 2. **Remove from git history**
+
    ```bash
    # Use git-filter-repo or BFG Repo-Cleaner
    # This is complex - see GitHub docs
@@ -233,7 +244,7 @@ git diff --cached
    - Review service logs
    - Check for unusual activity
 
-### Prevention:
+### Prevention
 
 - Use `.env` files (in `.gitignore`)
 - Use environment variables
@@ -242,26 +253,30 @@ git diff --cached
 
 ## 📚 Additional Resources
 
-### Documentation:
+### Documentation
+
 - [Netlify Functions Guide](https://docs.netlify.com/functions/overview/)
 - [Vercel Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)
 - [GitHub Security Best Practices](https://docs.github.com/en/code-security)
 
-### Tools:
+### Tools
+
 - [git-secrets](https://github.com/awslabs/git-secrets)
 - [truffleHog](https://github.com/trufflesecurity/truffleHog)
 - [GitGuardian](https://www.gitguardian.com/)
 
 ## ✅ This Repository
 
-### Current Status:
+### Current Status
+
 ✅ No real API keys exposed
 ✅ Placeholders clearly marked
 ✅ Security warnings in comments
 ✅ Serverless function pattern documented
 ✅ `.gitignore` includes sensitive patterns
 
-### What Users Need to Do:
+### What Users Need to Do
+
 1. Keep API keys in environment variables
 2. Use serverless functions for Notion
 3. Never commit real credentials
@@ -276,6 +291,7 @@ git diff --cached
 Anything in HTML, CSS, or JavaScript files can be viewed by anyone. Treat it as if it's published on a billboard.
 
 **When in doubt, ask:** "Would I write this on a public billboard?"
+
 - Wedding date? Yes ✅
 - Payment links? Yes ✅
 - API keys? NO ❌

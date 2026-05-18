@@ -39,7 +39,7 @@ The RSVP system now stores data using **Netlify Blob Storage** (or alternative J
 
 ## 🏗️ Architecture
 
-```
+```bash
 ┌─────────────────┐
 │  RSVP Form UI   │
 │  (views/rsvp.html)
@@ -138,6 +138,7 @@ Content-Type: application/json
 ### Response Format
 
 **Success:**
+
 ```json
 {
   "success": true,
@@ -147,6 +148,7 @@ Content-Type: application/json
 ```
 
 **Error:**
+
 ```json
 {
   "success": false,
@@ -215,6 +217,7 @@ X-Admin-Secret: your-admin-secret
 ### Error Handling
 
 **Unauthorized:**
+
 ```bash
 Status: 401
 {
@@ -263,6 +266,7 @@ Status: 401
 When admin approves an RSVP, Brevo sends:
 
 **If Attending (yes):**
+
 ```
 Subject: Your RSVP has been confirmed! 💍
 
@@ -280,6 +284,7 @@ Audrey & Josue-Daniel
 ```
 
 **If Not Attending (no):**
+
 ```
 Subject: Thank you for letting us know
 
@@ -371,12 +376,14 @@ exports.handler = async (event, context) => {
 ### Option 1: Netlify Blob Storage (Recommended)
 
 **Pros:**
+
 - Built-in to Netlify
 - No external service
 - Free tier: 10GB included
 - Automatic backups
 
 **Usage:**
+
 ```javascript
 import { getStore } from "@netlify/blobs";
 
@@ -387,6 +394,7 @@ await store.set(`rsvp_${id}`, JSON.stringify(rsvp));
 ### Option 2: JSON File Storage
 
 **Pros:**
+
 - Simple implementation
 - Version controlled in Git
 - Easy to backup
@@ -394,6 +402,7 @@ await store.set(`rsvp_${id}`, JSON.stringify(rsvp));
 **Location:** `data/rsvps.json`
 
 **Usage:**
+
 ```javascript
 const fs = require('fs');
 const path = require('path');
@@ -407,6 +416,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ### Option 3: External Database (Future)
 
 **Alternatives:**
+
 - Supabase (PostgreSQL) - Free tier
 - Firebase Realtime DB - Free tier
 - MongoDB Atlas - Free tier
@@ -430,6 +440,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ### Issue: RSVP submission fails
 
 **Check:**
+
 1. Are environment variables set in Netlify?
 2. Is Brevo API key valid?
 3. Check Netlify function logs for errors
@@ -437,6 +448,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ### Issue: Admin dashboard won't authenticate
 
 **Check:**
+
 1. Is `ADMIN_SECRET` set in Netlify?
 2. Is browser localStorage enabled?
 3. Try clearing localStorage and re-entering secret
@@ -444,6 +456,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ### Issue: Email not received
 
 **Check:**
+
 1. Is Brevo API key correct?
 2. Is sender email verified in Brevo?
 3. Check Brevo transactional activity for bounces
@@ -452,6 +465,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ### Issue: RSVPs not showing in admin
 
 **Check:**
+
 1. Is `X-Admin-Secret` header being sent?
 2. Is Netlify Blob Storage working?
 3. Check function logs at Netlify Dashboard
@@ -461,6 +475,7 @@ fs.writeFileSync(rsvpsFile, JSON.stringify(rsvps, null, 2));
 ## 📞 Support
 
 For issues:
+
 1. Check Netlify function logs
 2. Check browser console (F12)
 3. Check Brevo transactional activity
