@@ -51,6 +51,7 @@ export class AdminController {
         window.adminController = this;
 
         this.setupEventListeners();
+        this.setupTabs();
         
         // Check if already logged in
         if (this.adminSecret) {
@@ -59,6 +60,27 @@ export class AdminController {
         } else {
             this.showLogin();
         }
+    }
+
+    // Wire up RSVPs / Seating tab buttons. Graceful no-op if tabs absent.
+    setupTabs() {
+        const buttons = document.querySelectorAll('.admin-tab-btn');
+        const panels = document.querySelectorAll('.admin-tab-panel');
+        if (!buttons.length || !panels.length) return;
+
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('aria-controls');
+                buttons.forEach((b) => {
+                    const active = b === btn;
+                    b.classList.toggle('is-active', active);
+                    b.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+                panels.forEach((p) => {
+                    p.hidden = p.id !== targetId;
+                });
+            });
+        });
     }
 
     // ===========================

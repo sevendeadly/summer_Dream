@@ -127,6 +127,143 @@
             stroke-dasharray: 60;
             stroke-dashoffset: 60;
         }
+
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0 1.25rem;
+            border-bottom: 1px solid #e5e5e5;
+            flex-wrap: wrap;
+        }
+        .admin-tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1.1rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s ease, border-color 0.2s ease;
+            font-weight: 500;
+        }
+        .admin-tab-btn:hover { color: var(--primary-color, #d4a5a5); }
+        .admin-tab-btn.is-active {
+            color: var(--primary-color, #d4a5a5);
+            border-bottom-color: var(--primary-color, #d4a5a5);
+        }
+        .admin-tab-panel[hidden] { display: none !important; }
+
+        .seating-toolbar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .seating-toolbar button {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background: var(--primary-color, #d4a5a5);
+            color: #fff;
+        }
+        .seating-toolbar button.seating-btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+        .seating-status {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .seating-admin-layout {
+            display: grid;
+            grid-template-columns: minmax(220px, 280px) 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 768px) {
+            .seating-admin-layout { grid-template-columns: 1fr; }
+        }
+        .seating-unassigned,
+        .seating-table-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .seating-unassigned h3,
+        .seating-table-card h3 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+            color: #333;
+        }
+        .seating-table-card header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+        .seating-table-card header h3 { margin: 0; }
+        .seating-badge {
+            background: #f1f1f1;
+            color: #555;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+        }
+        .seating-table-card--over { border-color: #dc3545; }
+        .seating-table-card--over .seating-badge {
+            background: #fdecea;
+            color: #dc3545;
+        }
+        .seating-over-warning {
+            margin: 0 0 0.4rem;
+            color: #dc3545;
+            font-size: 0.8rem;
+        }
+        .seating-tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.9rem;
+        }
+        .seating-guest-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .seating-guest-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            font-size: 0.88rem;
+        }
+        .seating-guest-name { color: #333; flex: 1; }
+        .seating-guest-empty { color: #999; font-size: 0.85rem; font-style: italic; }
+        .seating-table-select {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.35rem;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: #fff;
+            max-width: 130px;
+        }
+        .seating-loading,
+        .seating-empty,
+        .seating-error-msg {
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .seating-error-msg { color: #dc3545; }
     </style>
 </head>
 <body class="admin-page">
@@ -162,51 +299,69 @@
                 </div>
             </div>
 
-            <div class="admin-stats">
-                <div class="stat-card">
-                    <h3>Total RSVPs</h3>
-                    <div class="number" id="stats-total">0</div>
-                </div>
-                <div class="stat-card" style="display: none;">
-                    <h3>Attending</h3>
-                    <div class="number" id="stats-attending">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Pending Review</h3>
-                    <div class="number" id="stats-pending">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Approved Attending Guests</h3>
-                    <div class="number" id="stats-approved-guests">0</div>
-                </div>
+            <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+                <button type="button" id="tab-rsvps" class="admin-tab-btn is-active" role="tab" aria-selected="true" aria-controls="rsvps-panel">RSVPs</button>
+                <button type="button" id="tab-seating" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="seating-panel">Seating</button>
             </div>
 
-            <div class="filters-bar">
-                <select id="filter-status">
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="declined">Declined</option>
-                </select>
-                <select id="filter-attending">
-                    <option value="">All Responses</option>
-                    <option value="yes">Attending</option>
-                    <option value="no">Not Attending</option>
-                </select>
-                <input type="text" id="search-input" placeholder="Search by name or email">
-                <select id="rows-per-page" style="margin-left: auto;">
-                    <option value="25" selected>25 rows</option>
-                    <option value="50">50 rows</option>
-                    <option value="100">100 rows</option>
-                </select>
+            <div id="rsvps-panel" class="admin-tab-panel" role="tabpanel" aria-labelledby="tab-rsvps">
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <h3>Total RSVPs</h3>
+                        <div class="number" id="stats-total">0</div>
+                    </div>
+                    <div class="stat-card" style="display: none;">
+                        <h3>Attending</h3>
+                        <div class="number" id="stats-attending">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Review</h3>
+                        <div class="number" id="stats-pending">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Approved Attending Guests</h3>
+                        <div class="number" id="stats-approved-guests">0</div>
+                    </div>
+                </div>
+
+                <div class="filters-bar">
+                    <select id="filter-status">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="declined">Declined</option>
+                    </select>
+                    <select id="filter-attending">
+                        <option value="">All Responses</option>
+                        <option value="yes">Attending</option>
+                        <option value="no">Not Attending</option>
+                    </select>
+                    <input type="text" id="search-input" placeholder="Search by name or email">
+                    <select id="rows-per-page" style="margin-left: auto;">
+                        <option value="25" selected>25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
+                </div>
+
+                <div id="rsvp-table" class="rsvp-list">
+                    <!-- Table injected by controllers/admin.js -->
+                    <div style="padding: 40px; text-align: center; color: #999;">Loading RSVPs...</div>
+                </div>
+
+                <div id="pagination-controls" class="pagination-controls"></div>
             </div>
 
-            <div id="rsvp-table" class="rsvp-list">
-                <!-- Table injected by controllers/admin.js -->
-                <div style="padding: 40px; text-align: center; color: #999;">Loading RSVPs...</div>
+            <div id="seating-panel" class="admin-tab-panel" role="tabpanel" aria-labelledby="tab-seating" hidden>
+                <div class="seating-toolbar">
+                    <button type="button" id="seating-import-btn">Import guest list</button>
+                    <button type="button" id="seating-save-btn" class="seating-btn-secondary">Save assignments</button>
+                    <span id="seating-status" class="seating-status" aria-live="polite"></span>
+                </div>
+                <div id="seating-chart">
+                    <p class="seating-loading">Open this tab to load the seating chart.</p>
+                </div>
             </div>
-
-            <div id="pagination-controls" class="pagination-controls"></div>
         </div>
     </section>
 
@@ -228,6 +383,12 @@
 
     <!-- Import Admin Controller -->
     <script type="module" src="../controllers/admin.js"></script>
+    <script type="module">
+        import { SeatingAdminController } from '../controllers/seating_admin.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            new SeatingAdminController().init();
+        });
+    </script>
 </body>
 </html>
 

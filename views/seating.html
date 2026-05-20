@@ -65,6 +65,13 @@
         <p>&copy; 2026 Audrey & Josue-Daniel</p>
     </footer>
 
-    <script type="module" src="../app.js"></script>
+    <script type="module">
+        import { LanguageController } from '../controllers/language.js';
+        import { SeatingLookupController } from '../controllers/seating_lookup.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            new LanguageController().init();
+            new SeatingLookupController().init();
+        });
+    </script>
 </body>
 </html>
