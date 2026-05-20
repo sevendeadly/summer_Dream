@@ -282,10 +282,22 @@
 
     <!-- Login section (shown when not authenticated) -->
     <section id="login-section" class="admin-auth">
-        <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">Admin Login</h2>
-        <input type="password" id="admin-secret" placeholder="Enter admin secret">
-        <button id="login-btn">Login</button>
-        <p style="color: #dc3545; margin-top: 15px; display: none;" id="auth-error">Invalid secret</p>
+        <div class="admin-auth-card">
+            <div class="admin-auth-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="11" width="16" height="9" rx="2"></rect>
+                    <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+                </svg>
+            </div>
+            <h2 class="admin-auth-title">Admin Login</h2>
+            <p class="admin-auth-subtitle">Enter the admin secret to access the dashboard.</p>
+            <form id="admin-auth-form" class="admin-auth-form" autocomplete="off">
+                <label for="admin-secret" class="admin-auth-label">Admin secret</label>
+                <input type="password" id="admin-secret" class="admin-auth-input" placeholder="••••••••" autocomplete="current-password">
+                <button type="button" id="login-btn" class="btn btn-submit admin-auth-submit">Login</button>
+                <p id="auth-error" class="admin-auth-error" role="alert" hidden>Invalid secret</p>
+            </form>
+        </div>
     </section>
 
     <!-- Dashboard section (hidden until authenticated) -->

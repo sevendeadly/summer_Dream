@@ -2,6 +2,11 @@
   functions = "controllers/netlify-func"
   publish = "."
 
+# Bundle the seating seed JSON with the Netlify Functions so import-seating
+# can fall back to disk if the admin client doesn't pass `names` in the body.
+[functions]
+  included_files = ["data/**"]
+
 [build.environment]
   NODE_VERSION = "18"
     # Disable Netlify secret scanner during deploys (or selectively omit paths/keys)
@@ -16,6 +21,11 @@
 [[redirects]]
   from = "/admin"
   to = "/views/admin_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/seating"
+  to = "/views/seating.html"
   status = 200
 
 # SPA fallback - route all non-file requests to index.html

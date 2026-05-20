@@ -114,6 +114,24 @@ export class LanguageController {
                     title: 'Wedding Albums',
                     subtitle: 'Relive the magic of our special day'
                 },
+                // Seating lookup page (guest QR flow)
+                seating: {
+                    title: 'Find Your Table',
+                    subtitle: 'Enter your name as it appears on your invitation',
+                    nameLabel: 'Your name',
+                    namePlaceholder: 'e.g. Marie Pete',
+                    findTable: 'Find my table',
+                    welcomeTitle: 'Welcome',
+                    welcomeMessage: 'Hi {name}, you are seated at {table}. Enjoy the celebration!',
+                    close: 'Close',
+                    ambiguousTitle: 'Which guest are you?',
+                    ambiguousHint: 'We found several matches. Please select your name:',
+                    cancel: 'Cancel',
+                    errorNameRequired: 'Please enter your name.',
+                    errorNotFound: "We couldn't find your name on the guest list. Please check the spelling.",
+                    errorGeneric: 'Something went wrong. Please try again in a moment.',
+                    errorDisabled: 'Seating lookup is currently unavailable. Please ask a host for help.'
+                },
                 // Common
                 common: {
                     days: 'Days',
@@ -227,6 +245,24 @@ export class LanguageController {
                 albums: {
                     title: 'Albums de Mariage',
                     subtitle: 'Revivez la magie de notre jour spécial'
+                },
+                // Seating lookup page (guest QR flow)
+                seating: {
+                    title: 'Trouvez votre table',
+                    subtitle: "Entrez votre nom tel qu'il apparaît sur votre invitation",
+                    nameLabel: 'Votre nom',
+                    namePlaceholder: 'ex. Marie Pete',
+                    findTable: 'Trouver ma table',
+                    welcomeTitle: 'Bienvenue',
+                    welcomeMessage: 'Bonjour {name}, vous êtes placé(e) à {table}. Profitez de la fête !',
+                    close: 'Fermer',
+                    ambiguousTitle: 'Quel invité êtes-vous ?',
+                    ambiguousHint: 'Nous avons trouvé plusieurs correspondances. Veuillez sélectionner votre nom :',
+                    cancel: 'Annuler',
+                    errorNameRequired: 'Veuillez saisir votre nom.',
+                    errorNotFound: "Nous n'avons pas trouvé votre nom sur la liste des invités. Vérifiez l'orthographe.",
+                    errorGeneric: "Une erreur s'est produite. Veuillez réessayer dans un instant.",
+                    errorDisabled: "La recherche de place n'est pas disponible pour le moment. Merci de demander à un hôte."
                 },
                 // Common
                 common: {
@@ -342,6 +378,24 @@ export class LanguageController {
                     title: 'Hochzeitsalben',
                     subtitle: 'Erleben Sie die Magie unseres besonderen Tages erneut'
                 },
+                // Seating lookup page (guest QR flow)
+                seating: {
+                    title: 'Finden Sie Ihren Tisch',
+                    subtitle: 'Geben Sie Ihren Namen so ein, wie er auf Ihrer Einladung steht',
+                    nameLabel: 'Ihr Name',
+                    namePlaceholder: 'z. B. Marie Pete',
+                    findTable: 'Meinen Tisch finden',
+                    welcomeTitle: 'Willkommen',
+                    welcomeMessage: 'Hallo {name}, Sie sitzen an {table}. Genießen Sie die Feier!',
+                    close: 'Schließen',
+                    ambiguousTitle: 'Welcher Gast sind Sie?',
+                    ambiguousHint: 'Wir haben mehrere Übereinstimmungen gefunden. Bitte wählen Sie Ihren Namen:',
+                    cancel: 'Abbrechen',
+                    errorNameRequired: 'Bitte geben Sie Ihren Namen ein.',
+                    errorNotFound: 'Wir konnten Ihren Namen nicht auf der Gästeliste finden. Bitte überprüfen Sie die Schreibweise.',
+                    errorGeneric: 'Etwas ist schiefgelaufen. Bitte versuchen Sie es gleich noch einmal.',
+                    errorDisabled: 'Die Sitzplatzsuche ist derzeit nicht verfügbar. Bitte wenden Sie sich an einen Gastgeber.'
+                },
                 // Common
                 common: {
                     days: 'Tage',
@@ -379,9 +433,13 @@ export class LanguageController {
     setupLanguageSwitcher() {
         // Create language switcher if it doesn't exist
         const navContainer = document.querySelector('.nav-container');
-        if (!navContainer) return;
-
         let langSwitcher = document.querySelector('.language-switcher');
+
+        // Bail only when neither a host nav nor an existing switcher is present.
+        // Pages like /views/seating.html ship their own .language-switcher markup
+        // and have no .nav-container, so we must still wire listeners up.
+        if (!navContainer && !langSwitcher) return;
+
         if (!langSwitcher) {
             langSwitcher = document.createElement('div');
             langSwitcher.className = 'language-switcher';
